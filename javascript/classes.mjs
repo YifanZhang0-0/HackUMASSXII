@@ -1,4 +1,4 @@
-
+import {encoding} from './coding.mjs';
 
 const PY="python"
 const JS="javascript"
@@ -25,7 +25,9 @@ class Library {
     
   }
   run(id, ...params) {
-    
+    byteArray = encoding(this.function[id], ...params)
+    // send the byte array off
+    // push the func id to waitlist
   }
 }
 

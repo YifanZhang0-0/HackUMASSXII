@@ -1,6 +1,6 @@
 
 
-const Magic = {
+export const Magic = {
   FCALL: 0xF1,
   FDEF: 0xF2,
   INT: 0xA1,

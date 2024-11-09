@@ -146,12 +146,17 @@ export function intConvHelper(num) {
 export function floatConvHelper(num) {
     // convert float into 64 bits (8 bytes)
     const temp = new Float64Array([num])
+    const buffer = temp.buffer
     let float_arr = new Uint8Array(9) // header + float itself
     float_arr[0] = Magic.FLOAT
-    for (let i = 0; i < 64; i+=8) {
-        // shift to right and mask to keep right most 8 bits
-        float_arr[i/8 + 1] = Number(temp[0] >> (8 * i) & 0xFF) 
+
+    for (let i = 0; i < 8; i++) { // use buffer to interface with float binaries
+        float_arr[i + 1] = new Uint8Array(buffer)[i];
     }
+    // for (let i = 0; i < 64; i+=8) {
+    //     // shift to right and mask to keep right most 8 bits
+    //     float_arr[8 - i/8] = Number((temp[0] >> parseFloat(8 * i)) & 0xFFn) 
+    // }
     return float_arr
 }
 
@@ -244,12 +249,12 @@ export function decode(arr, s) {
 
 function _decode(arr, s) {
     // get header
-    const header = arr[s++] << 8 + arr[s++]
+    const header = (arr[s++] << 8) + arr[s++]
     switch(header) {
         case Magic.INT:
             let int = 0
             for (let i=0; i<8; i++) {
-                int += data[s+i] << 8*(8-i)
+                int += (data[s+i] << 8*(8-i))
             }
             return [int, 9]
         case Magic.FLOAT:
@@ -259,14 +264,14 @@ function _decode(arr, s) {
             }
             return [Float64Array.from(float)[0], 9]
         case Magic.STRING:
-            let slen = data[s++] << 24 + data[s++] << 16 + data[s++] << 8 + data[s++]
+            let slen = (data[s++] << 24) + (data[s++] << 16) + (data[s++] << 8) + data[s++]
             let string = ""
             for (let i=s; i<slen+s; i++) {
                 string += String.fromCharCode(data[i])
             }
             return [string, 5+slen]
         case Magic.ARRAY:
-            let alen = data[s++] << 24 + data[s++] << 16 + data[s++] << 8 + data[s++]
+            let alen = (data[s++] << 24) + (data[s++] << 16) + (data[s++] << 8) + data[s++]
             let array = []
             for (let i=0; i<alen; i++) {
                 let [val, size] = _decode(data, s)
@@ -275,7 +280,7 @@ function _decode(arr, s) {
             }
             return array
         case Magic.OBJECT:
-            let olen = data[s++] << 24 + data[s++] << 16 + data[s++] << 8 + data[s++]
+            let olen = (data[s++] << 24) + (data[s++] << 16) + (data[s++] << 8) + data[s++]
             let strings = []
             let object = {}
             for (let i=0; i<olen; i++) {

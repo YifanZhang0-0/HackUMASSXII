@@ -10,7 +10,7 @@ reconstructed_int = coding.decode(test_int_array, 0)
 console.log(reconstructed_int)
 assert(reconstructed_int === 69, 'Encoding Decoding Int Failure')
 
-let test_float_array = coding.floatConvHelper(420.420)
+let test_float_array = coding.floatConvHelper(69.420)
 console.log(test_float_array)
 assert(test_float_array instanceof Uint8Array)
 assert(test_float_array.length === 9)

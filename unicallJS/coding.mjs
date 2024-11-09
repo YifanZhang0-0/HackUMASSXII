@@ -2,8 +2,6 @@ import { encode } from 'punycode';
 import { Magic } from './magic.mjs';
 import assert from 'assert';
 
-export {intConvHelper, floatConvHelper, strConvHelper, recurArrHelper, objConvHelper, decode}
-
 /**
  * Update the Unit8Array that carries binary info.
  * @param {Uint8Array} byte_array - The array containing all bytes we need to send.
@@ -136,7 +134,7 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=T
  * @param {number} num - int from params
  * @returns {array} a byte array encoded with integer
  */
-function intConvHelper(num) {
+export function intConvHelper(num) {
     // convert int into 64 bits (8 bytes)
     const temp = new BigInt64Array([BigInt(num)])
     let int_arr = new Uint8Array(9) // header + int itself
@@ -153,7 +151,7 @@ function intConvHelper(num) {
  * @param {number} num - float from params
  * @returns {array} a byte array encoded with float
  */
-function floatConvHelper(num) {
+export function floatConvHelper(num) {
     // convert float into 64 bits (8 bytes)
     const temp = new Float64Array([num])
     let float_arr = new Uint8Array(9) // header + float itself
@@ -170,7 +168,7 @@ function floatConvHelper(num) {
  * @param {string} str - string from params
  * @returns {array} a byte array encoded with string
  */
-function strConvHelper(str) {
+export function strConvHelper(str) {
     const temp = new Uint32Array([str.length]) //string length -> 4 bytes
     let str_head_len = new Uint8Array(5) // header + str len
     str_head_len[0] = Magic.STRING
@@ -188,7 +186,7 @@ function strConvHelper(str) {
 }
 
     // this is so clumped up
-function recurArrHelper(byte_array, obj_run_param) {
+export function recurArrHelper(byte_array, obj_run_param) {
     // recurisvely tries to construct an array from the params
     // special case: empty array
     if (obj_run_param.length === 0) {
@@ -227,7 +225,7 @@ function recurArrHelper(byte_array, obj_run_param) {
     }
 }
 
-function objConvHelper(byte_array, keys, values) {
+export function objConvHelper(byte_array, keys, values) {
     byte_array = updateByteArrray(byte_array, keys)
     // encoding values
     for (val in values) {

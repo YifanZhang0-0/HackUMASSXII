@@ -1,0 +1,22 @@
+.custom-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #6b46c1, #4299e1); /* Adjust colors as needed */
+}
+
+.custom-title {
+  font-size: 2.25rem; /* Adjust as needed */
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .custom-title {
+    font-size: 3.75rem; /* Adjust as needed for larger screens */
+  }
+}
+
+  

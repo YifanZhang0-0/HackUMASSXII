@@ -3,5 +3,5 @@ Repo for HackUMASS XII
 
 For python, run
 ```bash
-python -m pip install ./python
+python -m pip install -e ./python
 ```

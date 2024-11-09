@@ -8,7 +8,8 @@ export const Magic = {
   STRING: 0xA3,
   ARRAY: 0xA4,
   OBJECT: 0xA5,
-  VOID: 0xA6
+  VOID: 0xA6,
+  ERR: 0xA7,
 }
 
 

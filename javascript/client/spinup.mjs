@@ -14,19 +14,19 @@ async function setup_socket(library, socket_name) {
       socket.on("readable", () => {
         // first we have to get the functions
         if (library.functions === undefined) {
-          const head = new UInt8Array(socket.read(3))
+          const head = new UInt8Array(socket.read(5))
           // TODO: ASSERT HEAD IS 0xF2
-          const length = head[1] << 24 + head[2] << 16 + head[1] << 8 + head[2]
+          const length = head[1] << 24 + head[2] << 16 + head[3] << 8 + head[4]
           const data = new UInt8Array(socket.read(length))
           get_functions(library, data, length)
           return res()
         }
 
         // otherwise it's a return
-        const head = new UInt8Array(socket.read(3))
-        const length = head[1] << 8 + head[2]
+        const head = new UInt8Array(socket.read(5))
+        const length = head[1] << 24 + head[2] << 16 + head[3] << 8 + head[4]
         const data = new UInt8Array(socket.read(length))
-
+        process_return(library, data, length)
       })
     })
 
@@ -78,8 +78,20 @@ function get_function(list, data, s) {
   
 }
 
-function process_return(library, data, length) {
-  
+function process_return(library, data) {
+  let s=0
+  const retid = data[s] << 8 + data[++s]
+  const value = decode(data, ++s)
+
+  let idx = -1
+  library.waitlist.forEach((a, i) => {
+    if (a[0] != retid) return
+    idx = i
+    a[1](value)
+  })
+
+  if (idx == -1) throw new Error(`return id ${retid} not found in waitlist`)
+  library.waitlist.splice(idx, 1)
 }
 
 

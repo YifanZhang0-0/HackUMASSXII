@@ -160,7 +160,7 @@ export function floatConvHelper(num) {
     float_arr[0] = Magic.FLOAT
 
     for (let i = 0; i < 8; i++) { // use buffer to interface with float binaries
-        float_arr[i + 1] = new Uint8Array(buffer)[i];
+        float_arr[i + 1] = new Uint8Array(buffer)[i]
     }
     // for (let i = 0; i < 64; i+=8) {
     //     // shift to right and mask to keep right most 8 bits
@@ -176,16 +176,25 @@ export function floatConvHelper(num) {
  */
 export function strConvHelper(str) {
     const temp = new Uint32Array([str.length]) //string length -> 4 bytes
+    const buffer = temp.buffer
+
     let str_head_len = new Uint8Array(5) // header + str len
     str_head_len[0] = Magic.STRING
     for (let i = 0; i < 32; i +=4) {
-        str_head_len[i/4 + 1] = Number(temp[0] >> (8 * 1) & 0xFF)
+        str_head_len[i + 1] = new Uint8Array(buffer)[i]
     }
-    let start_index = str_head_len.length
-    let str_arr = new Uint8Array(4 + str.length)
-    for (let char in str.split("")) {
+
+    let start_index = 5
+    let str_arr = new Uint8Array(5 + str.length)
+
+    // populate str_arr with complete header information
+    for (let j = 0; j < str_head_len.length; j++) {
+        str_arr[j] = str_head_len[j]
+    }
+
+    for (let indx in str.split("")) { 
         // PUMP into str_arr the 8-bits chars
-        str_arr[start_index] = String.prototype.codePointAt(char)
+        str_arr[start_index] = str.codePointAt(indx)
         start_index += 1
     }
     return str_arr

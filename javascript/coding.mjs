@@ -56,9 +56,8 @@ export function encoding(func, ...params) {
     for (let i = 0; i < param_types.length; i++) {
         obj_run_param = params[i]
         func_param_type = param_types[i]
-        encodeEachParam(obj_run_param, func_param_type)
+        byte_array = encodeEachParam(byte_array, obj_run_param, func_param_type)
     }
-    encodeEachParam(params, param_types)
 
     return byte_array
 }
@@ -68,35 +67,58 @@ export function encoding(func, ...params) {
  * @param {array} params - params from obj.run, what we want to pass into python.
  * @param {array} param_types - actual function parameter types specified by python.
  */
-function encodeEachParam(obj_run_param, func_param_type) {
+function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=True) {
+    // we check type by default, toggle off for Object encoding
     switch (func_param_type) {
         case Magic.INT:
-            if (!(typeof obj_run_param === 'number')) {
+            if (checkType && !(typeof obj_run_param === 'number')) {
                 throw new Error("Parameter Int Type Mismatch.")
             }
             data = intConvHelper(Math.floor(obj_run_param))
             byte_array = updateByteArrray(byte_array, Magic.INT, data)
-            break;
+            return byte_array;
         case Magic.FLOAT:
             if (!(typeof obj_run_param === 'number')) {
                 throw new Error("Parameter Float Type Mismatch.")
             }
             data = floatConvHelper(Math.floor(obj_run_param))
             byte_array = updateByteArrray(byte_array, Magic.FLOAT, data)
-            break;
+            return byte_array;
         case Magic.STRING:
             if(!(typeof obj_run_param === 'string')) {
                 throw new Error("Parameter String Type Mismatch.")
             }
             data = strConvHelper(obj_run_param)
             byte_array = updateByteArrray(byte_array, Magic.STRING, data)
-            break;
+            return byte_array;
         case Magic.ARRAY:
-            recurArrHelper(obj_run_param, Magic.ARRAY)
-            // selects part of params
-            break;
+            // encoding array header
+            arr_len = obj_run_param.length
+            temp_arr = new Uint8Array(5)
+            temp_arr[0] = Magic.ARRAY
+            const temp_len_num = new Uint32Array([arr_len])
+            for (let i = 0; i < 32; i +=4 ) { // encoding array length
+                temp_arr[i/4 + 1] = Number(temp_len_num[0] >> (8 * 1) & 0xFF)
+            }
+
+            // encoding array content
+            byte_array = recurArrHelper(byte_array, obj_run_param, Magic.ARRAY)
+            return byte_array;
         case Magic.OBJECT:
-            break;
+            // encoding object header
+            obj_len = obj_run_param.length
+            temp_obj_arr = new Uint8Array(5)
+            temp_obj_arr[0] = Magic.OBJECT
+            const temp_obj_len = new Uint32Array([obj_len])
+            for (let i = 0; i < 32; i += 4) {
+                temp_obj_arr[i/4 + 1] = Number(temp_obj_len[0] >> (8 * 1) & 0xFF)
+            }
+            // encode each of the attributes within object
+            byte_array = objConvHelper()
+            return byte_array;
+        case Magic.VOID:
+            byte_array = updateByteArrray(byte_array, [Magic.VOID])
+            return byte_array
         default:
             throw new Error("Idk why tf ur here, this should not happen")
     }
@@ -110,10 +132,11 @@ function encodeEachParam(obj_run_param, func_param_type) {
 function intConvHelper(num) {
     // convert int into 64 bits (8 bytes)
     const temp = new BigInt64Array([num])
-    int_arr = new Uint8Array(8)
+    int_arr = new Uint8Array(9) // header + int itself
+    int_arr[0] = Magic.INT
     for (let i = 0; i < 64; i+=8) {
         // shift to right and mask to keep right most 8 bits
-        int_arr[i/8] = Number(temp[0] >> (8 * i) & 0xFF) 
+        int_arr[i/8 + 1] = Number(temp[0] >> (8 * i) & 0xFF) 
     }
     return int_arr
 }
@@ -126,10 +149,11 @@ function intConvHelper(num) {
 function floatConvHelper(num) {
     // convert float into 64 bits (8 bytes)
     const temp = new Float64Array([num])
-    float_arr = new Uint8Array(8)
+    float_arr = new Uint8Array(9) // header + float itself
+    float_arr[0] = Magic.FLOAT
     for (let i = 0; i < 64; i+=8) {
         // shift to right and mask to keep right most 8 bits
-        float_arr[i/8] = Number(temp[0] >> (8 * i) & 0xFF) 
+        float_arr[i/8 + 1] = Number(temp[0] >> (8 * i) & 0xFF) 
     }
     return float_arr
 }
@@ -140,10 +164,11 @@ function floatConvHelper(num) {
  * @returns {array} a byte array encoded with string
  */
 function strConvHelper(str) {
-    const temp = new Uint32Array([str.length])
-    str_len = new Uint8Array(4) // srting length -> 4 bytes
+    const temp = new Uint32Array([str.length]) //string length -> 4 bytes
+    str_head_len = new Uint8Array(5) // header + str len
+    str_head_len[0] = Magic.STRING
     for (let i = 0; i < 32; i +=4) {
-        str_len[i/4] = Number(temp[0] >> (4 * 1) & 0xFF)
+        str_head_len[i/4 + 1] = Number(temp[0] >> (8 * 1) & 0xFF)
     }
     let start_index = str_len.length
     str_arr = new Uint8Array(4 + str.length)
@@ -156,24 +181,27 @@ function strConvHelper(str) {
 }
 
     // this is so clumped up
-function recurArrHelper(arr, magicNum) {
-    magicNum = Magic.ARRAY
+function recurArrHelper(byte_array, obj_run_param) {
     // recurisvely tries to construct an array from the params
     // special case: empty array
-    if (n.length === 0) {
-        return updateByteArrray(byte_array, [0, 0, 0, 0])
+    if (obj_run_param.length === 0) {
+        byte_array =  updateByteArrray(byte_array, [0, 0, 0, 0])
+        return byte_array
     }
     // none empty array / element
-    for (n in arr) {
+    for (n in obj_run_param) { 
         // singular element
-        if (arr.length === undefined) { 
+        if (n.length === undefined) { 
             // recognize array element data type
             if (isInt(n)) {
-                return encodeEachParam(n, Magic.INT)
+                byte_array = encodeEachParam(byte_array, n, Magic.INT)
+                return byte_array
             } else if (isFloat(n)) {
-                return encodeEachParam(n, Magic.FLOAT)
+                byte_array = encodeEachParam(byte_array, n, Magic.FLOAT)
+                return byte_array
             } else if (typeof n === 'string') {
-                return encodeEachParam(n, Magic.STRING)
+                byte_array = encodeEachParam(byte_array, n, Magic.STRING)
+                return byte_array
             } else if (true) {
                 // TODO 
                 // object 
@@ -183,9 +211,14 @@ function recurArrHelper(arr, magicNum) {
                 // void type?
             }
         } else {
-            return recurArrHelper(n, Magic.ARRAY)
+            return recurArrHelper(byte_array, n)
         }
     }
+}
+
+function objConvHelper(byte_array, obj_run_param) {
+
+    return byte_array
 }
 
 function isInt(n){

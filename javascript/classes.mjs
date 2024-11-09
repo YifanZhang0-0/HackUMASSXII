@@ -50,7 +50,7 @@ export class Library {
   async run(id, ...params) {
     let retid = this.ret++
 
-    bytes = encoding(this.functions[id], retid, ...params)
+    bytes = encoding(this.functions[id], ...params)
     
     const wait = new Promise((res, _rej) => {
       this.waitlist.push([retid, res])

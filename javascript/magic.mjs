@@ -7,7 +7,8 @@ const Magic = {
   FLOAT: 0xA2,
   STRING: 0xA3,
   ARRAY: 0xA4,
-  OBJECT: 0xA5
+  OBJECT: 0xA5,
+  VOID: 0xA6
 }
 
 

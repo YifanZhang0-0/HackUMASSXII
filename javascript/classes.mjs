@@ -41,7 +41,7 @@ class Library {
     }
   }
   run(id, ...params) {
-    byteArray = encoding(this.function[id], ...params)
+    byteArray = encoding(this.functions[id], ...params)
     // send the byte array off
     // push the func id to waitlist
   }

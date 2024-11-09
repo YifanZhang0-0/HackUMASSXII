@@ -36,3 +36,41 @@ def write_back(socket_to_client: socket.socket) -> None:
     # Note that since the client creates the socket, the client is technically
     # the server at the socket layer.
     socket_to_client.send(classes.encode_module(function_list))
+
+if __name__ == "__main__":
+    # These are test cases for this module.
+    my_module = [
+        classes.FunctionMeta(
+            name="foo",
+            args=[
+                classes.TypeMeta.INT,
+            ],
+            return_type=classes.TypeMeta.INT,
+        ),
+        classes.FunctionMeta(
+            name="bar",
+            args=[
+                classes.TypeMeta.STRING,
+                classes.TypeMeta.STRING,
+            ],
+            return_type=classes.TypeMeta.NONE,
+        ),
+    ]
+    data = encode_module(my_module)
+    print(data.hex().upper())
+    # F20000001700000003666F6FA10001A100010003626172A60002A3A3
+    #
+    # F2: magic
+    # 00000017: length
+    # 0000: id
+    # 0003: len("foo")
+    # 666F6F: "foo"
+    # A1: returns INT
+    # 0001: 1 parameter
+    # A1: takes INT
+    # 0001: id
+    # 0003: len("bar")
+    # 626172: "bar"
+    # A6: returns NONE
+    # 0002: 2 parameters
+    # A3A3: takes STR and STR

@@ -1,7 +1,8 @@
-from enum import IntEnum
 from asyncio import Future
+from enum import IntEnum
 import os, os.path
 import subprocess
+from unicall import coding
 
 PY="python"
 JS="javascript"
@@ -84,35 +85,49 @@ if __name__ == "__main__":
     # TODO: Actually write test cases lol.
     pass
 
-
-
 class Library:
     def __init__(self, filename, filetype):
         self.filename = filename
         self.filetype = filetype
-        self.retid = 0
-        self.functions = None # fill this out with spinup
+        self.return_id = 0
+        self.functions: list[FunctionMeta] = [] # fill this out with spinup
         self.socket = None
-        self.waitlist = []
+        self.waitlist: list[tuple[int, Future]] = []
 
     def load(self):
         self.spinup()
         
-        for func in self.functions:
+        for func_id, func in self.functions:
             async def method(*params):
                 await self.run(func_id, *params)
             setattr(self, func['name'], method)
 
-    async def run(self, func_id, *params):
+    async def run(
+        self,
+        function_id: int,
+        *params: list[any],
+    ):
+        """Sends a function call request to the connection for the library.
 
-        retid = self.retid
-        self.retid += 1
-        packet = encode_function_return(this.functions[funcid], funcid, retid, *params)
+        Args:
+            function_id: The id for the function that we want to call.
+            *params: A list of arguments to send to the function.
 
+        Returns:
+            A future that will resolve to the library call result.
+        """
+        packet = coding.encode_function_call(
+            self.functions[function_id],
+            function_id,
+            self.return_id,
+            *params
+        )
         # add to waitlist
         res = Future()
         
-        waitlist.push([1, res])
+        self.waitlist.push([self.return_id, res])
+
+        self.return_id += 1
 
         # send packet
         self.socket.send(packet)
@@ -121,7 +136,6 @@ class Library:
         r = await res
         return r
        
-
 class ReturnData:
     """Represents a returned value ready to be sent back to the client.
     """

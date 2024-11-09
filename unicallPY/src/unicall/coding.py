@@ -68,7 +68,6 @@ def encode_function_call(functions, functionID, returnID, *args):
     
     return packet
 
-
 def encoding(*args):
     """
     Encoding arguments according to the following scheme:

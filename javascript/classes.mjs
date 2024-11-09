@@ -22,6 +22,16 @@ class Library {
   }
 
   load() {
+
+    for (func of functions) {
+      this[func.name] = (...params) => {
+        this.run(func.id, ...params)
+      }
+    }
+
+
+
+
     if (this.filetype == JS) {
       // Load JS file content
       const fileContent = readFileSync(this.filename);

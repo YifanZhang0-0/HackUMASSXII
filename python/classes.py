@@ -74,3 +74,19 @@ if __name__ == "__main__":
     # These are test cases for this module.
     # TODO: Actually write test cases lol.
     pass
+class Library:
+    def __init__(self, functions):
+        self.functions = functions
+
+    def load (self, function):
+        for func in self.functions:
+            setattr(self, func['name'], self.create_method(func['id']))
+
+    def create_method(self, func_id):
+        def method(*params):
+            return self.run(func_id, *params)
+        return method
+    
+    def run(self, func_id, *params):
+        print(f"Running function ID {func_id} with params: {params}")
+        return f"Result of function ID {func_id}"

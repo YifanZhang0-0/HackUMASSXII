@@ -1,11 +1,11 @@
 import { encoding } from './coding.mjs';
-import { run_server, setup_socket } from "./client/spinup.mjs"
+import { setup_socket } from "./client/spinup.mjs"
 
-const PY="python"
-const JS="javascript"
+export const PY="python"
+export const JS="javascript"
 
 // function definition
-class Function {
+export class Function {
   constructor(types, ret, id, name) {
     this.types = types
     this.ret = ret
@@ -15,14 +15,14 @@ class Function {
 }
 
 // return from a function
-class Return {
+export class Return {
   constructor(value, ret) {
     this.value = value
     this.ret = ret
   }
 }
 
-class Library {
+export class Library {
   constructor(filename, filetype) {
     this.filename = filename
     this.filetype = filetype

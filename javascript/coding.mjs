@@ -162,30 +162,57 @@ function recurArrHelper() {
 
 
 
+export function decode(arr, s) {
+    return _decode(arr, s)[0]
+}
 
-
-function decode(arr, s) {
+function _decode(arr, s) {
     // get header
-    const header = arr[s] << 8 + arr[++s]
+    const header = arr[s++] << 8 + arr[s++]
     switch(header) {
         case Magic.INT:
             let int = 0
             for (let i=0; i<8; i++) {
                 int += data[s+i] << 8*(8-i)
             }
-            return int
+            return [int, 9]
         case Magic.FLOAT:
             let float = new UInt8Array(8)
             for (let i=0; i<8; i++) {
                 float[i] = data[s+i]
             }
-            return Float64Array.from(float)[0]
+            return [Float64Array.from(float)[0], 9]
         case Magic.STRING:
-            break
+            let slen = data[s++] << 24 + data[s++] << 16 + data[s++] << 8 + data[s++]
+            let string = ""
+            for (let i=s; i<slen+s; i++) {
+                string += String.fromCharCode(data[i])
+            }
+            return [string, 5+slen]
         case Magic.ARRAY:
-            break
+            let alen = data[s++] << 24 + data[s++] << 16 + data[s++] << 8 + data[s++]
+            let array = []
+            for (let i=0; i<alen; i++) {
+                let [val, size] = _decode(data, s)
+                s += size
+                array.push(val)
+            }
+            return array
         case Magic.OBJECT:
-            break
+            let olen = data[s++] << 24 + data[s++] << 16 + data[s++] << 8 + data[s++]
+            let strings = []
+            let object = {}
+            for (let i=0; i<olen; i++) {
+                let [str, len] = _decode(data, s)
+                strings.push(str)
+                s += len
+            }
+            for (let i=0; i<olen; i++) {
+                let [val, len] = _decode(data, s)
+                object[strings[i]] = val
+                s += len
+            }
+            return object
         case Magic.VOID:
             return undefined
         case Magic.ERR:

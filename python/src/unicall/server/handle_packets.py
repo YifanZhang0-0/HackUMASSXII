@@ -1,9 +1,11 @@
 import asyncio
 import socket
+import sys
 from typing import Callable
 from unicall import classes
 from unicall import coding
 from unicall.server import interface
+from unicall.server import writeback
 
 # TODO: update this to the ReturnData type
 pending_returns = list[any]
@@ -29,13 +31,13 @@ async def handle_packet(
         destination=return_id,
     ))
     
-def serve(socket_to_client: socket.socket):
-    """Starts the event loop for the server
-    
-    Args:
-        socket_to_client: A socket that the server is already connected to.
-            This is the socket that the server will talk to.
+def serve():
+    """Serves the RPC server on the socket in sys.argv[1].
     """
+    socket_to_client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    socket_to_client.connect(sys.argv[1])
+    writeback.write_back(socket_to_client=socket_to_client)
+
     async def inner():
         while True:
             data = bytes()

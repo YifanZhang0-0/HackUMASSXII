@@ -4,9 +4,10 @@ import struct
 import subprocess
 from unicall import classes
 from unicall import coding
+from unicall import library
 
 def setup_socket(
-    library: classes.Library,
+    library: library.Library,
     socket_name: str,
 ):
     """Entry point for using a Library object.
@@ -53,7 +54,7 @@ def setup_socket(
                     process_return(library, data)
 
 def run_server(
-    library: classes.Library,
+    library: library.Library,
     socket_name: str,
 ):
     """Launches the subprocess for an RPC server.
@@ -67,7 +68,7 @@ def run_server(
         subprocess.Popen(["node", library.filename, f"socket={socket_name}"])
 
 def get_functions(
-    library: classes.Library,
+    library: library.Library,
     data: bytes,
 ):
     """Populates a Library object using a library manifest packet.
@@ -140,7 +141,7 @@ def get_function(
     return head_index
 
 def process_return(
-    library: classes.Library,
+    library: library.Library,
     data: bytes
 ):
     """Process a segment of data representing a returned value.
@@ -173,12 +174,12 @@ def process_return(
 
 # Main function to run the server setup
 def main():
-    library = classes.Library()
-    library.filename = "script.py"  # The Python script to run
+    python_library = library.Library()
+    python_library.filename = "script.py"  # The Python script to run
     socket_name = "/tmp/my_socket"
 
     try:
-        setup_socket(library, socket_name)
+        setup_socket(python_library, socket_name)
     finally:
         if os.path.exists(socket_name):
             os.remove(socket_name)

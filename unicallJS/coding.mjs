@@ -16,6 +16,8 @@ function updateByteArrray(byte_array, data) {
 }
 
 function initFunCall(byte_array, id, ret) {
+    //TODO 
+    let place_holder = 0 // don't know byte_array length until end
     // split func id & ret id into two bytes
     let temp = new Uint16Array([id, ret])
     let id0 = (temp[0] & 0xFF00) >> 8 // first 8 bits
@@ -98,14 +100,15 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=t
             byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.ARRAY:
-            // encoding array header
-            let arr_len = obj_run_param.length
-            let temp_arr = new Uint8Array(5)
-            temp_arr[0] = Magic.ARRAY
-            const temp_len_num = new Uint32Array([arr_len])
-            for (let i = 0; i < 32; i +=4 ) { // encoding array length
-                temp_arr[i/4 + 1] = Number(temp_len_num[0] >> (8 * 1) & 0xFF)
-            }
+            // encoding array header done in helper
+
+            // let arr_len = obj_run_param.length
+            // let temp_arr = new Uint8Array(5)
+            // temp_arr[0] = Magic.ARRAY
+            // const temp_len_num = new Uint32Array([arr_len])
+            // for (let i = 0; i < 32; i +=4 ) { // encoding array length
+            //     temp_arr[i/4 + 1] = Number(temp_len_num[0] >> (8 * 1) & 0xFF)
+            // }
 
             // encoding array content
             byte_array = recurArrHelper(byte_array, obj_run_param, Magic.ARRAY)
@@ -184,7 +187,7 @@ export function strConvHelper(str) {
     let str_head_len = new Uint8Array(5) // header + str len
     str_head_len[0] = Magic.STRING
     for (let i = 0; i < 32; i +=4) {
-        str_head_len[i + 1] = new Uint8Array(buffer)[i]
+        str_head_len[5 - (i / 8 + 1)] = new Uint8Array(buffer)[i]
     }
 
     let start_index = 5
@@ -207,43 +210,71 @@ export function strConvHelper(str) {
  * Recursivly construct a binary representation of an array parameter.
  * @param {Uint8Array} byte_array - The byte array encoded with all the information to be sent to python.
  * @param {Any} obj_run_param - The array to be encoded into binaries.
+ * @param {boolean} first_call - Whether or not it is the first call for this recursion
  * @returns {Uint8Array} Binary representation with newly encoded array.
  */
-export function recurArrHelper(byte_array, obj_run_param) { // this is so clumped up
+export function recurArrHelper(byte_array, obj_run_param, first_call=true, obj_recursion=false) { 
     // recurisvely tries to construct an array from the params
-    // special case: empty array
-    if (obj_run_param.length === 0) {
-        byte_array =  updateByteArrray(byte_array, [0, 0, 0, 0])
+    // first thing first, if the length of the array is not 0, we encode its length into the byte array
+    // none object recursion, no array header annotation
+    if (first_call && obj_run_param.length != 0 && !obj_recursion) {
+        const temp = new Uint32Array([obj_run_param.length]) //string length -> 4 bytes
+        const buffer = temp.buffer
+
+        let arr_head_len = new Uint8Array(5) // header + array len
+        arr_head_len[0] = Magic.ARRAY
+        for (let i = 0; i < 32; i +=4) {
+            arr_head_len[5 - (i / 8 + 1)] = new Uint8Array(buffer)[i]
+        }
+
+        byte_array = updateByteArrray(byte_array, arr_head_len)
+    }
+
+    // base case: array is now empty
+    if (!first_call && obj_run_param.length === 0) {
+        return byte_array
+    } 
+    // empty array immediately at input 
+    if ((first_call && obj_run_param.length === 0)) {
+        byte_array =  updateByteArrray(byte_array, [Magic.ARRAY, 0, 0, 0, 0])
         return byte_array
     }
-    // none empty array / element
-    for (let n of obj_run_param) { 
-        // singular element
-        if (n.length === undefined) { 
-            // recognize array element data type
-            // no type checking
-            if (isInt(n)) {
-                byte_array = encodeEachParam(byte_array, n, Magic.INT, false)
-                return byte_array
-            } else if (isFloat(n)) {
-                byte_array = encodeEachParam(byte_array, n, Magic.FLOAT, false)
-                return byte_array
-            } else if (typeof n === 'string') {
-                byte_array = encodeEachParam(byte_array, n, Magic.STRING, false)
-                return byte_array
-            } else if (typeof x === 'object' && !Array.isArray(x) && x !== null) {
-                // object 
-                let key_and_val = []
-                key_and_val = Object.entries(n)
-                byte_array = objConvHelper(byte_array, key_and_val[0], key_and_val[1])
-                return byte_array
-            } else {
-                // VOID type
-                byte_array = encodeEachParam(byte_array, n, Magic.VOID)
-                return byte_array
-            }
+
+    // speical case: empty array within obj_run_param array
+    if (obj_run_param[0].length === 0) {
+        byte_array =  updateByteArrray(byte_array, [Magic.ARRAY, 0, 0, 0, 0])
+        return recurArrHelper(byte_array, obj_run_param.slice(1), false)
+    }
+
+    // singular element
+    let n = obj_run_param[0]
+    if (Array.isArray(n)) { // must be array only 
+        //byte_array = updateByteArrray(byte_array, Magic.ARRAY)
+        console.log(n)
+        return recurArrHelper(byte_array, n)
+    } else { // must not be array
+        // individual elements
+        // no type checking
+        console.log("hi")
+        if (isInt(n)) {
+            byte_array = encodeEachParam(byte_array, n, Magic.INT, false)
+            return recurArrHelper(byte_array, obj_run_param.slice(1), false)
+        } else if (isFloat(n)) {
+            byte_array = encodeEachParam(byte_array, n, Magic.FLOAT, false)
+            return recurArrHelper(byte_array, obj_run_param.slice(1), false)
+        } else if (typeof n === 'string') {
+            byte_array = encodeEachParam(byte_array, n, Magic.STRING, false)
+            return recurArrHelper(byte_array, obj_run_param.slice(1), false)
+        } else if (typeof n === 'object' && !Array.isArray(n) && n !== null) { //strict check for object
+            // object 
+            let key_and_val = []
+            key_and_val = Object.entries(n)
+            byte_array = objConvHelper(byte_array, key_and_val[0], key_and_val[1])
+            return recurArrHelper(byte_array, obj_run_param.slice(1), false)
         } else {
-            return recurArrHelper(byte_array, n)
+            // VOID type
+            byte_array = encodeEachParam(byte_array, n, Magic.VOID)
+            return recurArrHelper(byte_array, obj_run_param.slice(1), false)
         }
     }
 }
@@ -259,7 +290,7 @@ export function objConvHelper(byte_array, keys, values) {
     byte_array = updateByteArrray(byte_array, keys)
     // encoding values
     for (let val of values) { // 'of' gets actual val as opposed to index 
-        byte_array = recurArrHelper(byte_array, val)
+        byte_array = recurArrHelper(byte_array, val, _, true)
     }
     return byte_array
 }

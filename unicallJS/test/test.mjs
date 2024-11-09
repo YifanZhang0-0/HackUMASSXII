@@ -24,7 +24,13 @@ import assert from 'assert';
 // assert(test_str_array instanceof Uint8Array)
 // assert(test_str_array.length === (5 + str.length))
 
-let arr = [4, 5, 'hi']
+// let arr = [4, 5, 'world']
+// let dummy = [69]
+// let byte_array = new Uint8Array(dummy)
+// let test_arr_array = coding.recurArrHelper(byte_array, arr)
+// console.log(test_arr_array)
+
+let arr = [[3]]
 let dummy = [69]
 let byte_array = new Uint8Array(dummy)
 let test_arr_array = coding.recurArrHelper(byte_array, arr)

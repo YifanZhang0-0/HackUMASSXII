@@ -2,6 +2,8 @@ import { encode } from 'punycode';
 import { Magic } from './magic.mjs';
 import assert from 'assert';
 
+export {intConvHelper, floatConvHelper, strConvHelper, recurArrHelper, objConvHelper, decode}
+
 /**
  * Update the Unit8Array that carries binary info.
  * @param {Uint8Array} byte_array - The array containing all bytes we need to send.
@@ -134,14 +136,14 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=T
  * @param {number} num - int from params
  * @returns {array} a byte array encoded with integer
  */
-export function intConvHelper(num) {
+function intConvHelper(num) {
     // convert int into 64 bits (8 bytes)
     const temp = new BigInt64Array([BigInt(num)])
     let int_arr = new Uint8Array(9) // header + int itself
     int_arr[0] = Magic.INT
     for (let i = 0; i < 64; i+=8) {
         // shift to right and mask to keep right most 8 bits
-        int_arr[i/8 + 1] = Number((temp[0] >> BigInt(8 * i)) & 0xFFn)
+        int_arr[8 - i/8] = Number((temp[0] >> BigInt(8 * i)) & 0xFFn)
     }
     return int_arr
 }

@@ -37,9 +37,9 @@ def serve():
     socket_to_client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     if sys.argv[1][:7] != "socket=":
         raise "Bad"
-    print("HI")
     socket_to_client.connect(sys.argv[1][7:])
     writeback.write_back(socket_to_client=socket_to_client)
+    print("HI")
 
     async def inner():
         while True:
@@ -55,4 +55,4 @@ def serve():
                 function_id=function_id,
                 *arguments,
             )
-    asyncio.run(inner)
+    asyncio.run(inner())

@@ -9,13 +9,14 @@ export async function setup_socket(library, socket_name) {
   const function_def_finished = new Promise((res, _) => {
 
     if (fs.existsSync(socket_name)) fs.rmSync(socket_name)
-    const server = net.createServer((socket) => {
+    library.server = net.createServer((socket) => {
+      library.socket = socket
       socket.on("readable", () => {
         // first we have to get the functions
         if (library.functions === undefined) {
 
           const read = socket.read(5)
-          if (read == null) { console.log("got zero"); return }
+          if (read == null) return
           const head = new Uint8Array(read)
 
           assert(head[0] == 0xF2)
@@ -28,15 +29,21 @@ export async function setup_socket(library, socket_name) {
 
         // otherwise it's a return
         // TODO: assert head is 0xF1
-        const head = new Uint8Array(socket.read(5))
+        const read = socket.read(5)
+        if (read == null) return
+        const head = new Uint8Array(read)
+        assert(head[0] == 0xF1)
         const length = head[1] << 24 + head[2] << 16 + head[3] << 8 + head[4]
         const data = new Uint8Array(socket.read(length))
         process_return(library, data, length)
       })
+
+      // socket.on("close", () => console.log("closed"))
+      // socket.on("end", () => console.log("end stream"))
     })
 
     //first we listen
-    server.listen(socket_name)
+    library.server.listen(socket_name)
     //then we run the server
     run_server(library.filetype, library.filename, socket_name)
   })
@@ -60,10 +67,8 @@ function get_functions(library, data, length) {
 
   library.functions = []
   let sidx = 0;
-  console.log(sidx, length)
   while (sidx < length) {
     sidx = get_function(library.functions, data, sidx)
-    console.log(sidx, length)
   }
 }
 

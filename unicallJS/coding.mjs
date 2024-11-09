@@ -60,7 +60,7 @@ export function encoding(func, ...params) {
  * @param {array} params - params from obj.run, what we want to pass into python.
  * @param {array} param_types - actual function parameter types specified by python.
  */
-function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=True) {
+function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=true) {
     // we check type by default, toggle off for Object encoding
     let data;
     switch (func_param_type) {

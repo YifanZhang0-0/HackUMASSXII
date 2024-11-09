@@ -29,6 +29,7 @@ export class Library {
     this.filetype = filetype
     this.functions = undefined // list of functions populated by load
     this.socket = undefined // write to this in socket setup
+    this.server = undefined
     this.ret = 0 // global ret increment thingy
     this.waitlist = []
   }
@@ -42,8 +43,8 @@ export class Library {
     await setup_socket(this, `/tmp/${this.filename}.sock`)
     
     for (const func of this.functions) {
-      this[func.name] = (...params) => {
-        this.run(func.id, ...params)
+      this[func.name] = async (...params) => {
+        await this.run(func.id, ...params)
       }
     }
   }
@@ -51,16 +52,23 @@ export class Library {
   async run(id, ...params) {
     let retid = this.ret++
 
-    bytes = encoding(this.functions[id], ...params)
+    let bytes = encoding(this.functions[id], ...params)
     
     const wait = new Promise((res, _rej) => {
       this.waitlist.push([retid, res])
     })
     // send the byte array off
-    this.send(bytes)
+    console.log("sending", bytes)
+    this.socket.write(bytes)
     // wait to get sent notified for the correct thing
     let retvalue = await wait
+    console.log("got wait back")
     return retvalue
+  }
+
+  close() {
+    this.socket.destroy()
+    this.server.close()
   }
 }
 

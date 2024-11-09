@@ -57,20 +57,24 @@ if __name__ == "__main__":
         ),
     ]
     data = encode_module(my_module)
-    print(data.hex().upper())
-    # F20000001700000003666F6FA10001A100010003626172A60002A3A3
-    #
-    # F2: magic
-    # 00000017: length
-    # 0000: id
-    # 0003: len("foo")
-    # 666F6F: "foo"
-    # A1: returns INT
-    # 0001: 1 parameter
-    # A1: takes INT
-    # 0001: id
-    # 0003: len("bar")
-    # 626172: "bar"
-    # A6: returns NONE
-    # 0002: 2 parameters
-    # A3A3: takes STR and STR
+    expected_serialization = "F20000001700000003666F6FA10001A100010003626172A60002A3A3"
+    if data.hex().upper() != expected_serialization:
+        print("encode_module returned an incorrect serialization")
+        print(f"got:      {data.hex().upper()}")
+        print(f"expected: {expected_serialization}")
+        # F20000001700000003666F6FA10001A100010003626172A60002A3A3
+        #
+        # F2: magic
+        # 00000017: length
+        # 0000: id
+        # 0003: len("foo")
+        # 666F6F: "foo"
+        # A1: returns INT
+        # 0001: 1 parameter
+        # A1: takes INT
+        # 0001: id
+        # 0003: len("bar")
+        # 626172: "bar"
+        # A6: returns NONE
+        # 0002: 2 parameters
+        # A3A3: takes STR and STR

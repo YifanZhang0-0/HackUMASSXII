@@ -9,17 +9,9 @@ import assert from 'assert';
  * @returns {Uint8Array} Updated byte_array.
  */
 function updateByteArrray(byte_array, data) {
-
-    let start_index = byte_array.length
-    let new_byte_array = new Uint8Array(byte_array.length + data.length)
-    new_byte_array = byte_array.slice() // deep copy
-
-    for (const d in data) { // object already converted, not for...of
-        //new_byte_array.set([d], start_index)
-        new_byte_array[start_index] = d
-        start_index += 1
-    }
-
+    let new_byte_array = new Uint8Array(byte_array.length + data.length);
+    new_byte_array.set(byte_array)
+    new_byte_array.set(data, byte_array.length)
     return new_byte_array
 }
 

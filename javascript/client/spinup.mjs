@@ -4,12 +4,12 @@ import { exec } from "child_process"
 import { PY, JS } from "../coding.mjs"
 import { Function } from "../classes.mjs"
 
-import { FDEF, INT, FLOAT, STRING, ARRAY, OBJECT } from "../magic.mjs"
+import { Magic } from "../magic.mjs"
 
 async function setup_socket(library, socket_name) {
-  if (fs.existsSync(socket_name)) fs.rmSync(socket_name)
+  const function_def_finished = new Promise((res, _) => {
 
-  const function_def_finished = new Promise((res, rej) => {
+    if (fs.existsSync(socket_name)) fs.rmSync(socket_name)
     const server = net.createServer((socket) => {
       socket.on("readable", () => {
         // first we have to get the functions
@@ -24,16 +24,19 @@ async function setup_socket(library, socket_name) {
 
         // otherwise it's a return
         const head = new UInt8Array(socket.read(3))
-        const length = head[1] << 4 + head[2]
+        const length = head[1] << 8 + head[2]
         const data = new UInt8Array(socket.read(length))
-        // notify waitlist somehow
+
       })
     })
 
+    //first we listen
     server.listen(socket_name)
+    //then we run the server
+    run_server(library.filetype, library.filename, socket_name)
   })
   
-  await function_def_finished()
+  await function_def_finished
 }
 
 function run_server(type, file, socket_name) {
@@ -72,6 +75,10 @@ function get_function(list, data, s) {
   
   list.push(new Function(types, ret, id, name))
   return s
+  
+}
+
+function process_return(library, data, length) {
   
 }
 

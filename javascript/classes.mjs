@@ -1,8 +1,10 @@
-import {encoding} from './coding.mjs';
+import { encoding } from './coding.mjs';
+import { run_server, setup_socket } from "./client/spinup.mjs"
 
 const PY="python"
 const JS="javascript"
 
+// function definition
 class Function {
   constructor(types, ret, id, name) {
     this.types = types
@@ -12,48 +14,51 @@ class Function {
   }
 }
 
-
+// return from a function
+class Return {
+  constructor(value, ret) {
+    this.value = value
+    this.ret = ret
+  }
+}
 
 class Library {
   constructor(filename, filetype) {
     this.filename = filename
     this.filetype = filetype
     this.functions = undefined // list of functions populated by load
+    this.socket = undefined // write to this in socket setup
+    this.ret = 0 // global ret increment thingy
+    this.waitlist = []
   }
 
-  load() {
+  write(bytes) {
+    this.socket.send(bytes)
+  }
 
+  async load() {
+    
+    await setup_socket(this, `/tmp/${filename}.sock`)
     for (func of functions) {
       this[func.name] = (...params) => {
         this.run(func.id, ...params)
       }
     }
-
-
-
-
-    if (this.filetype == JS) {
-      // Load JS file content
-      const fileContent = readFileSync(this.filename);
-
-      // Find global functions to add to this.functions
-      for (const prop in globalThis) {
-        if (typeof globalThis[prop] === 'function') {
-          const func = new Function([], 'any', this.functions.length, prop);
-          this.functions.push(func);
-        }
-      }
-
-      console.log('Functions loaded:', this.functions.map(f => f.name));
-
-    } else if (this.filetype == PY) {
-      
-    }
   }
-  run(id, ...params) {
-    byteArray = encoding(this.functions[id], ...params)
+
+  async run(id, ...params) {
+    let retid = this.ret++
+
+    bytes = encoding(this.functions[id], retid, ...params)
+    
+    const wait = new Promise((res, _rej) => {
+      this.waitlist.push([retid, res])
+    })
     // send the byte array off
-    // push the func id to waitlist
+    this.send(bytes)
+    // wait to get sent notified for the correct thing
+    let retvalue = await wait
+    return retvalue
   }
 }
 

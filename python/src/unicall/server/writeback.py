@@ -19,14 +19,12 @@ def encode_module(module_meta: list[classes.FunctionMeta]):
     Returns:
         A byte string that represents our module interface.
     """
-    function_data = map(lambda x: x.encode(), module_meta)
-    packet_length = sum(map(lambda x: len(x), function_data))
     output = bytes()
 
-    output += 0xF2.to_bytes(1)
-    output += packet_length.to_bytes(4)
-    for function_meta_serialized in function_data:
-        output += function_meta_serialized
+    for id, function_meta in enumerate(module_meta):
+        output += function_meta.encode(id)
+    output = len(output).to_bytes(4, 'big') + output
+    output = 0xF2.to_bytes(1, 'big') + output
     return output
 
 def write_back(socket_to_client: socket.socket) -> None:

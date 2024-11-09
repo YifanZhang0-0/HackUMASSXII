@@ -17,6 +17,7 @@ class TypeMeta(IntEnum):
     STRING = 0xA3
     ARRAY = 0xA4
     OBJECT = 0xA5
+    NONE = 0xA6
 
 class FunctionMeta:
     """Represents the metadata for a function, which consists of its name and
@@ -62,12 +63,13 @@ class FunctionMeta:
         """
         output = bytes()
 
-        output += id.to_bytes(2)
-        output += len(self.name).to_bytes(2)
+        output += id.to_bytes(2, 'big')
+        output += len(self.name).to_bytes(2, 'big')
         output += self.name.encode()
-        output += self.return_type.to_bytes(1)
+        output += self.return_type.to_bytes(1, 'big')
+        output += len(self.args).to_bytes(2, 'big')
         for argument_type in self.args:
-            output += argument_type.to_bytes(1)
+            output += argument_type.to_bytes(1, 'big')
         return output
 
 if __name__ == "__main__":

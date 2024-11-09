@@ -33,10 +33,10 @@ async def handle_packet(
         return_value = func(*args)
 
     print("HAIHDWIHWD")
-    socket.send(classes.ReturnData(
+    socket.send(coding.encode_return_data(classes.ReturnData(
         value=return_value,
         destination=return_id,
-    ))
+    )))
     
 def serve():
     """Serves the RPC server on the socket in sys.argv[1].
@@ -48,9 +48,11 @@ def serve():
     writeback.write_back(socket_to_client=socket_to_client)
     print("HII")
 
+
     async def inner():
+        die = 0
         print("hi2")
-        while True:
+        while die < 1000:
             data = bytes()
             data += socket_to_client.recv(5)
             remaining_length = int.from_bytes(data[1:5], 'big')
@@ -59,11 +61,18 @@ def serve():
             function_id, return_id, arguments = coding.decode_function_request(data)
             print("hi6")
 
-            asyncio.create_task(handle_packet(
-                socket=socket_to_client,
-                return_id=return_id,
-                function_id=function_id,
+            await handle_packet(
+                socket_to_client,
+                return_id,
+                function_id,
                 *arguments,
-            ))
+            );
+            # asyncio.create_task(handle_packet(
+                # socket_to_client,
+                # return_id,
+                # function_id,
+                # *arguments,
+            # ))
             print("hi7")
+            die += 1
     asyncio.run(inner())

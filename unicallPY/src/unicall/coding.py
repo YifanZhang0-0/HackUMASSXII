@@ -168,6 +168,8 @@ def encode_return_data(return_data: ReturnData) -> bytes:
     output = len(output).to_bytes(4, "big") + output
     output = b"\xb0" + output
 
+    return output
+
 def decode_function_request(data: bytes) -> tuple[int, int, list[any]]:
     """Decodes a function packet.
 

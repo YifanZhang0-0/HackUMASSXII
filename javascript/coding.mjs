@@ -3,26 +3,26 @@ import {Magic} from './magic.mjs';
 
 /**
  * Update the Unit8Array that carries binary info.
- * @param {Uint8Array} byteArray - The array containing all bytes we need to send.
- * @param {array} data - The data to be placed into byteArray.
- * @returns {Uint8Array} Updated byteArray.
+ * @param {Uint8Array} byte_array - The array containing all bytes we need to send.
+ * @param {array} data - The data to be placed into byte_array.
+ * @returns {Uint8Array} Updated byte_array.
  */
-function updateByteArray(byteArray, data) {
+function updatebyte_array(byte_array, data) {
 
-    let startIndex = byteArray.length
-    let newByteArray = new Uint8Array(byteArray.length + data.length)
-    newByteArray.copy(byteArray)
+    let start_index = byte_array.length
+    let new_byte_array = new Uint8Array(byte_array.length + data.length)
+    new_byte_array.copy(byte_array)
 
     for (d in data) {
-        newByteArray.set([d], startIndex)
-        startIndex += 1
+        new_byte_array.set([d], start_index)
+        start_index += 1
     }
 
-    return newByteArray
+    return new_byte_array
 }
 
-function initFunCall(byteArray, id, ret) {
-    placeHolder = 0 // don't know byteArray length until end
+function initFunCall(byte_array, id, ret) {
+    place_holder = 0 // don't know byte_array length until end
     // split func id & ret id into two bytes
     let temp = new Uint16Array([id, ret])
     id0 = temp[0] & 0xFF00 // first 8 bits
@@ -30,63 +30,63 @@ function initFunCall(byteArray, id, ret) {
     ret0 = temp[1] & 0xFF00 // first 8 bits
     ret1 = temp[1] & 0x00FF // last 8 bits
 
-    data = [Magic.FCALL, placeHolder, id0, id1, ret0, ret1]
-    return updateByteArray(byteArray, data)
+    data = [Magic.FCALL, place_holder, id0, id1, ret0, ret1]
+    return updatebyte_array(byte_array, data)
 }
 
 export function encoding(func, ...params) {
     
-    let byteArray = new Uint8Array();
+    let byte_array = new Uint8Array();
     // func is func obj
-    paramType = func.types // strings of the type itself
+    param_types = func.types // strings of the type itself
     ret = func.ret
     id = func.id
-    funcName = func.name 
+    func_name = func.name 
 
     // count checking
     try {
-        params.length === paramType.length
+        params.length === param_types.length
     } catch (_) {
         throw new Error("Parameter Count Mismatch.")
     }
 
-    // encoding function headers & metadata & ids into byteArray
-    byteArray = initFunCall(byteArray, id, ret)
+    // encoding function headers & metadata & ids into byte_array
+    byte_array = initFunCall(byte_array, id, ret)
 
     // encoding parameters into byteArra
-    encodingParam(params, paramType)
+    encodingParam(params, param_types)
 
-    return byteArray
+    return byte_array
 }
 
 /**
- * Fact checking & tries type conversion & updates byteArray within each case
+ * Fact checking & tries type conversion & updates byte_array within each case
  * @param {array} params - params from obj.run, what we want to pass into python.
- * @param {array} paramType - actual function parameter types specified by python.
+ * @param {array} param_types - actual function parameter types specified by python.
  */
-function encodingParam(params, paramType) {
-    for (let i = 0; i < paramType.length; i++) {
-        switch (paramType[i]) {
+function encodingParam(params, param_types) {
+    for (let i = 0; i < param_types.length; i++) {
+        switch (param_types[i]) {
             case Magic.INT:
                 if (!(typeof params[i] === 'number')) {
                     throw new Error("Parameter Int Type Mismatch.")
                 }
                 data = intConvHelper(Math.floor(params[i]))
-                byteArray = updateByteArray(byteArray, Magic.INT, data)
+                byte_array = updatebyte_array(byte_array, Magic.INT, data)
                 break;
             case Magic.FLOAT:
                 if (!(typeof params[i] === 'number')) {
                     throw new Error("Parameter Float Type Mismatch.")
                 }
                 data = floatConvHelper(Math.floor(params[i]))
-                byteArray = updateByteArray(byteArray, Magic.FLOAT, data)
+                byte_array = updatebyte_array(byte_array, Magic.FLOAT, data)
                 break;
             case Magic.STRING:
                 if(!(typeof params[i] === 'string')) {
                     throw new Error("Parameter String Type Mismatch.")
                 }
                 data = strConvHelper(params[i])
-                byteArray = updateByteArray(byteArray, Magic.STRING, data)
+                byte_array = updatebyte_array(byte_array, Magic.STRING, data)
                 break;
             case Magic.ARRAY:
                 recurArrHelper()
@@ -100,42 +100,57 @@ function encodingParam(params, paramType) {
     }
 }
 
+/**
+ * helper function for int conversion into bytes array 
+ * @param {number} num - int from params
+ * @returns {array} a byte array encoded with integer
+ */
 function intConvHelper(num) {
     // convert int into 64 bits (8 bytes)
     const temp = new BigInt64Array([num])
-    intArr = new Uint8Array(8)
+    int_arr = new Uint8Array(8)
     for (let i = 0; i < 64; i+=8) {
-        // shift to left and mask to keep left most 8 bits
-        intArr[i/8] = Number(temp[0] >> (8 * i) & 0xFF) 
+        // shift to right and mask to keep right most 8 bits
+        int_arr[i/8] = Number(temp[0] >> (8 * i) & 0xFF) 
     }
-    return intArr
+    return int_arr
 }
 
+/**
+ * helper function for float conversion into bytes array 
+ * @param {number} num - float from params
+ * @returns {array} a byte array encoded with float
+ */
 function floatConvHelper(num) {
-    // convert int into 64 bits (8 bytes)
+    // convert float into 64 bits (8 bytes)
     const temp = new Float64Array([num])
-    floatArr = new Uint8Array(8)
+    float_arr = new Uint8Array(8)
     for (let i = 0; i < 64; i+=8) {
-        // shift to left and mask to keep left most 8 bits
-        floatArr[i/8] = Number(temp[0] >> (8 * i) & 0xFF) 
+        // shift to right and mask to keep right most 8 bits
+        float_arr[i/8] = Number(temp[0] >> (8 * i) & 0xFF) 
     }
-    return floatArr
+    return float_arr
 }
 
+/**
+ * helper function for string conversion into bytes array 
+ * @param {string} str - string from params
+ * @returns {array} a byte array encoded with string
+ */
 function strConvHelper(str) {
     const temp = new Uint32Array([str.length])
-    strLen = new Uint8Array(4) // srting length -> 4 bytes
+    str_len = new Uint8Array(4) // srting length -> 4 bytes
     for (let i = 0; i < 32; i +=4) {
-        strLen[i/4] = Number(temp[0] >> (4 * 1) & 0xFF)
+        str_len[i/4] = Number(temp[0] >> (4 * 1) & 0xFF)
     }
-    let startIndex = strLen.length
-    strArr = new Uint8Array(4 + str.length)
+    let start_index = str_len.length
+    str_arr = new Uint8Array(4 + str.length)
     for (char in str.split("")) {
-        // PUMP into strArr the 8-bits chars
-        strArr[startIndex] = String.prototype.codePointAt(char)
-        startIndex += 1
+        // PUMP into str_arr the 8-bits chars
+        str_arr[start_index] = String.prototype.codePointAt(char)
+        start_index += 1
     }
-    return strArr
+    return str_arr
 }
 
 function recurArrHelper() {

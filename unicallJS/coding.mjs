@@ -75,21 +75,24 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=t
                 throw new Error("Parameter Int Type Mismatch.")
             }
             data = intConvHelper(Math.floor(obj_run_param))
-            byte_array = updateByteArrray(byte_array, Magic.INT, data)
+            data.unshift(Magic.INT)
+            byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.FLOAT:
             if (checkType && !(typeof obj_run_param === 'number')) {
                 throw new Error("Parameter Float Type Mismatch.")
             }
             data = floatConvHelper(Math.floor(obj_run_param))
-            byte_array = updateByteArrray(byte_array, Magic.FLOAT, data)
+            data.unshift(Magic.FLOAT)
+            byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.STRING:
             if(checkType && !(typeof obj_run_param === 'string')) {
                 throw new Error("Parameter String Type Mismatch.")
             }
             data = strConvHelper(obj_run_param)
-            byte_array = updateByteArrray(byte_array, Magic.STRING, data)
+            data.unshift(Magic.STRING)
+            byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.ARRAY:
             // encoding array header
@@ -178,9 +181,9 @@ export function strConvHelper(str) {
     for (let i = 0; i < 32; i +=4) {
         str_head_len[i/4 + 1] = Number(temp[0] >> (8 * 1) & 0xFF)
     }
-    let start_index = str_len.length
+    let start_index = str_head_len.length
     let str_arr = new Uint8Array(4 + str.length)
-    for (char in str.split("")) {
+    for (let char in str.split("")) {
         // PUMP into str_arr the 8-bits chars
         str_arr[start_index] = String.prototype.codePointAt(char)
         start_index += 1

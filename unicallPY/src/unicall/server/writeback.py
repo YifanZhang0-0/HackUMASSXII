@@ -1,10 +1,7 @@
 from unicall import classes
+from unicall.server import interface
 import socket
 # import file_list
-
-# TODO: replace this with some code that actually fetches the list of exported
-# functions.
-function_list: list[classes.FunctionMeta]
 
 def encode_module(module_meta: list[classes.FunctionMeta]):
     """Encodes the public interface for a module as a byte string.
@@ -35,6 +32,7 @@ def write_back(socket_to_client: socket.socket) -> None:
     """
     # Note that since the client creates the socket, the client is technically
     # the server at the socket layer.
+    function_list = map(lambda x: x[0], interface.interface)
     socket_to_client.send(classes.encode_module(function_list))
 
 if __name__ == "__main__":

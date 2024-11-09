@@ -1,4 +1,5 @@
 import struct
+from unicall.classes import ReturnData, ErrorValue
 
 def encode_function_call(functionID, returnID, *args):
     """
@@ -131,10 +132,127 @@ def encoding(*args):
     # Combine headers and data into final encoded format
     return header_section + data_section
 
-# Custom class to represent the "Return" data
-class ReturnData:
-    def __init__(self, elements):
-        self.elements = elements
+def encode_return_data(return_data: ReturnData) -> bytes:
+    """Encodes a `ReturnData` instance as a byte string.
+    """
+    output = bytes()
+    output += return_data.destination.to_bytes(4, "big")
+    output += encoding(return_data.value)
+    output = len(output).to_bytes(4, "big") + output
+    output = b"\xb0" + output
+
+def decode_function_request(data: bytes) -> tuple[int, int, list[any]]:
+    """Decodes a function packet.
+
+    Args:
+        data: The full function call packet as defined in the IPC spec.
+    
+    Returns:
+        A tuple (function_id, return_id, arguments), where function_id is the id
+        of the function that we want to call, return_id is the id the we want to
+        return to, and arguments is the list of function arguments.
+    """
+    function_id = int.from_bytes(data[5:7], 'big')
+    return_id = int.from_bytes(data[7:9], 'big')
+    argument_data = data[9:]
+    arguments = []
+    remaining_arguments = argument_data
+    while len(remaining_arguments) > 0:
+        decode_result = decode_value(remaining_arguments)
+        if decode_result == None:
+            raise ValueError(
+                f"Tried to process token which"
+                f"could not be decoded: {remaining_arguments.hex().upper()}"
+            )
+        value, value_length = decode_result
+        arguments.append(value)
+        remaining_arguments = remaining_arguments[value_length:]
+    return function_id, return_id, arguments
+
+def decode_value(data: bytes) -> tuple[any, int] | None:
+    """Decodes the first data value in a byte string of data values
+
+    Args:
+        data: The bytestring that we want to read from.
+
+    Returns:
+        If the decoding fails due to lack of information, this function returns
+        none. Otherwise, this function returns (value, length), where value is
+        the first value contained in the data, and length is the length of the
+        value within the data string
+    """
+    if len(data) < 1: return None
+    flag = data[0]
+
+    if flag == 0xA1: # INT
+        if len(data) < 9: return None
+        return (int.from_bytes(data[1:9]), 9)
+
+    elif flag == 0xA2: # FLOAT
+        if len(data) < 9: return None
+        return (struct.unpack('!d', data[1:9])[0], 9)
+
+    elif flag == 0xA3: # STRING
+        if len(data) < 5: return None
+        string_length = int.from_bytes(data[1:5])
+
+        if len(data) < 5 + string_length: return None
+        return (data[5:].decode(), string_length + 5)
+
+    elif flag == 0xA4: # ARRAY
+        if len(data) < 5: return None
+        array_size = int.from_bytes(data[1:5])
+        remaining_data = data[5:]
+        key_array = []
+        while len(key_array) < array_size:
+            decode_result = decode_value(remaining_data)
+            if decode_result == None:
+                return None
+            value, token_length = decode_result
+            key_array.append(value)
+            remaining_data = remaining_data[token_length:]
+        return key_array, len(data) - len(remaining_data)
+        
+    elif flag == 0xA5: # OBJECT
+        if len(data) < 5: return None
+        object_size = int.from_bytes(data[1:5])
+        remaining_data = data[5:]
+        key_array = []
+        value_array = []
+        while len(key_array) < object_size:
+            decode_result = decode_value(remaining_data)
+            if decode_result == None:
+                return None
+            value, token_length = decode_result
+            if not isinstance(value, str):
+                raise ValueError(
+                    f"Non-string key in object {data.hex().upper()}"
+                )
+            key_array.append(value)
+            remaining_data = remaining_data[token_length:]
+
+        while len(value_array) < object_size:
+            decode_result = decode_value(remaining_data)
+            if decode_result == None:
+                return None
+            value, token_length = decode_result
+            key_array.append(value)
+            remaining_data = remaining_data[token_length:]
+
+        decoded_object = {}
+        for i in range(object_size):
+            decoded_object[key_array[i]] = value_array[i]
+
+        return decoded_object, len(data) - len(remaining_data)
+
+    elif flag == 0xA6: # NONE
+        return (None, 1)
+
+    elif flag == 0xA7: # ERROR
+        return (ErrorValue, 1)
+
+    else:
+        print(f"Error invalid type flag {flag}")
 
 #test encoding with (1) an array and (2) an obj
 def main():

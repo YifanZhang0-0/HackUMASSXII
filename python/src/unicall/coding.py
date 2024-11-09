@@ -1,12 +1,13 @@
 import struct
 from unicall.classes import ReturnData, ErrorValue
 
-def encode_function_call(functionID, returnID, *args):
+def encode_function_call(functions, functionID, returnID, *args):
     """
     Encodes a function call packet with a given functionID, returnID, and arguments.
     This function formats the packet headers according to the specified structure.
 
     Parameters:
+    - functions (FunctionMeta): 
     - functionID (int): ID of the function being called.
     - returnID (int): ID for the return data.
     - *args: Variable length argument list of function parameters.
@@ -28,12 +29,38 @@ def encode_function_call(functionID, returnID, *args):
     
     # Return ID (2 bytes)
     packet.extend(returnID.to_bytes(2, byteorder='big'))
-    
-    # Encode arguments using the original encoding function
-    args_encoded = encoding(*args)  # Calls your original encoding function
-    
-    # Append the encoded arguments to the packet
-    packet.extend(args_encoded)
+
+    # Verify the number of arguments matches the FunctionMeta argument length
+    if len(args) != len(functions.args):
+        raise ValueError(f"Expected {len(functions.args)} arguments but received {len(args)}.")
+
+    # Encode each argument based on the expected types from FunctionMeta
+    encoded_args = bytearray()
+    for arg, expected_type in zip(args, functions.args):
+        if isinstance(arg, int) and expected_type == 0xA1:
+            # Encode integer
+            encoded_args.extend(b'\xA1' + arg.to_bytes(8, byteorder='big'))
+        elif isinstance(arg, float) and expected_type == 0xA2:
+            # Encode float
+            encoded_args.extend(b'\xA2' + struct.pack('>d', arg))
+        elif isinstance(arg, str) and expected_type == 0xA3:
+            # Encode string
+            string_bytes = arg.encode('utf-8')
+            if len(string_bytes) > 65535:
+                raise ValueError("String too long to encode with 16-bit length")
+            encoded_args.extend(b'\xA3' + len(string_bytes).to_bytes(2, byteorder='big') + string_bytes)
+        elif isinstance(arg, list) and expected_type == 0xA4:
+            # Encode list
+            element_data = b''.join(encoding(elem) for elem in arg)
+            encoded_args.extend(b'\xA4' + len(arg).to_bytes(2, byteorder='big') + element_data)
+        elif arg is None and expected_type == 0xA6:
+            # Encode None
+            encoded_args.extend(b'\xA6')
+        else:
+            raise ValueError(f"Argument type {type(arg)} does not match expected type {expected_type}.")
+
+    # Append encoded arguments to the packet
+    packet.extend(encoded_args)
     
     # Calculate the size of the following data (everything after the first 5 bytes)
     size_of_data = len(packet) - 5  # Exclude the magic number and size placeholder

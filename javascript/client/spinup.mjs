@@ -23,6 +23,7 @@ export async function setup_socket(library, socket_name) {
         }
 
         // otherwise it's a return
+        // TODO: assert head is 0xF1
         const head = new UInt8Array(socket.read(5))
         const length = head[1] << 24 + head[2] << 16 + head[3] << 8 + head[4]
         const data = new UInt8Array(socket.read(length))
@@ -93,7 +94,6 @@ function process_return(library, data) {
   if (idx == -1) throw new Error(`return id ${retid} not found in waitlist`)
   library.waitlist.splice(idx, 1)
 }
-
 
 
 

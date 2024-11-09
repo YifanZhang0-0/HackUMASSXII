@@ -1,5 +1,4 @@
 
-
 export const Magic = {
   FCALL: 0xF1,
   FDEF: 0xF2,
@@ -11,5 +10,12 @@ export const Magic = {
   VOID: 0xA6,
   ERR: 0xA7,
 }
+
+export const INT = Magic.INT
+export const FLOAT = Magic.FLOAT
+export const STRING = Magic.STRING
+export const ARRAY = Magic.ARRAY
+export const OBJECT = Magic.OBJECT
+export const VOID = Magic.VOID
 
 

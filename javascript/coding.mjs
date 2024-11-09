@@ -1,5 +1,4 @@
-import { param } from 'express/lib/request';
-import {Magic} from './magic.mjs';
+import { Magic } from './magic.mjs';
 
 /**
  * Update the Unit8Array that carries binary info.
@@ -260,4 +259,76 @@ function _decode(arr, s) {
             throw new Error(`invalid header for return packet ${header}`)
     }
 }
+
+
+function encode_fdef(funclist) {
+    let res = [0xF2, 0, 0, 0, 0]
+    
+    for (func in funclist) {
+        encode_function(res, func)
+    }
+    let len = res.length - 5
+    res[1] = len & 0xFF000000 >> 24
+    res[2] = len & 0xFF0000 >> 16
+    res[3] = len & 0xFF00 >> 8
+    res[4] = len & 0xFF
+
+    return UInt8Array(res)
+}
+
+function encode_function(res, func) {
+    // encode 2 byte id
+    res.push((func.id & 0xFF00) >> 8)
+    res.push(func.id & 0xFF)
+    // encode 2 byte length of function name
+    res.push((func.name.length & 0xFF00) >> 8)
+    res.push(func.name.length & 0xFF)
+    // encode function name
+    for (let i=0; i<func.name.length; i++) {
+        res.push(func.name.charCodeAt(i))
+    }
+    // encode return type
+    res.push(func.ret)
+    // encode number of arguments
+    res.push((func.types.length & 0xFF00) >> 8)
+    res.push(func.types.length & 0xFF)
+    // encode argument types
+    func.types.forEach(a => {
+        res.push(a)
+    })
+}
+
+export function decode_function(data, length) {
+    let s=0
+    let id = data[s++] << 8 + data[s++]
+    let retid = data[s++] << 8 + data[s++]
+    let params = []
+
+    while (s < length) {
+        let [val, len] = _decode(data, s)
+        s += len
+        params.push(val)
+    }
+
+    return [id, retid, params]
+}
+
+
+
+export function encode_return(retid, value, type) {
+    let res = [0xB0, 0, 0, 0, 0]
+    res.push((retid & 0xFF00) >> 8)
+    res.push(retid & 0xFF)
+    encode_type(res, value, type)
+
+    let len = res.length - 5
+    res[1] = len & 0xFF000000 >> 24
+    res[2] = len & 0xFF0000 >> 16
+    res[3] = len & 0xFF00 >> 8
+    res[4] = len & 0xFF
+
+    return UInt8Array(res)
+}
+
+
 

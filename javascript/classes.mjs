@@ -6,11 +6,12 @@ export const JS="javascript"
 
 // function definition
 export class Function {
-  constructor(types, ret, id, name) {
+  constructor(types, ret, id, name, exec) {
     this.types = types
     this.ret = ret
     this.id = id
     this.name = name
+    this.exec = exec || undefined // we only care about this on the client side
   }
 }
 

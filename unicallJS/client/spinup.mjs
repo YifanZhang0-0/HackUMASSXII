@@ -40,7 +40,15 @@ export async function setup_socket(library, socket_name) {
 function run_server(type, file, socket_name) {
   switch (type) {
     case PY:
-      exec(`python ${file} socket=${socket_name}`)
+      console.log("hello")
+      console.log(file)
+      const my_process = exec(`python ${file} socket=${socket_name}`)
+      my_process.stdout.on('data', function(data) {
+          console.log(data); 
+      });
+      my_process.stderr.on('data', function(data) {
+          console.log(data); 
+      });
       break;
     default:
       throw new Error("bad language")

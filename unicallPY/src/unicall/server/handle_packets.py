@@ -35,7 +35,10 @@ def serve():
     """Serves the RPC server on the socket in sys.argv[1].
     """
     socket_to_client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    socket_to_client.connect(sys.argv[1])
+    if sys.argv[1][:7] != "socket=":
+        raise "Bad"
+    print("HI")
+    socket_to_client.connect(sys.argv[1][7:])
     writeback.write_back(socket_to_client=socket_to_client)
 
     async def inner():

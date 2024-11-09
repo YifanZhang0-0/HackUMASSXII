@@ -6,7 +6,7 @@ import { Function } from "../classes.mjs"
 
 import { Magic } from "../magic.mjs"
 
-async function setup_socket(library, socket_name) {
+export async function setup_socket(library, socket_name) {
   const function_def_finished = new Promise((res, _) => {
 
     if (fs.existsSync(socket_name)) fs.rmSync(socket_name)

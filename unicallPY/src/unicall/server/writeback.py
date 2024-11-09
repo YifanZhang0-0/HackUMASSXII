@@ -32,8 +32,9 @@ def write_back(socket_to_client: socket.socket) -> None:
     """
     # Note that since the client creates the socket, the client is technically
     # the server at the socket layer.
-    function_list = map(lambda x: x[0], interface.interface)
-    socket_to_client.send(classes.encode_module(function_list))
+    function_list = list(map(lambda x: x[0], interface.interface))
+    encode = encode_module(function_list)
+    socket_to_client.send(encode)
 
 if __name__ == "__main__":
     # These are test cases for this module.

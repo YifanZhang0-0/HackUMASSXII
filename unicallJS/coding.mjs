@@ -263,7 +263,7 @@ function _decode(arr, s) {
             }
             return [int, 9]
         case Magic.FLOAT:
-            let float = new UInt8Array(8)
+            let float = new Uint8Array(8)
             for (let i=0; i<8; i++) {
                 float[i] = data[s+i]
             }
@@ -321,7 +321,7 @@ function encode_fdef(funclist) {
     res[3] = len & 0xFF00 >> 8
     res[4] = len & 0xFF
 
-    return UInt8Array(res)
+    return Uint8Array(res)
 }
 
 function encode_function(res, func) {
@@ -377,7 +377,7 @@ export function encode_return(retid, value, type) {
     res[3] = len & 0xFF00 >> 8
     res[4] = len & 0xFF
 
-    return UInt8Array(res)
+    return Uint8Array(res)
 }
 
 // Tests

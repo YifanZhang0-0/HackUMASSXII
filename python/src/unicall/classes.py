@@ -1,4 +1,5 @@
 from enum import IntEnum
+from asyncio import Future
 
 class TypeMeta(IntEnum):
     """Represents the numbering scheme that we use to denote types.
@@ -83,24 +84,38 @@ class Library:
     def __init__(self, filename, filetype):
         self.filename = filename
         self.filetype = filetype
+        self.retid = 0
+        self.functions = None # fill this out with spinup
+        self.socket = None
+        self.waitlist = []
 
-    def load (self):
+    def load(self):
+        self.spinup()
         
         for func in self.functions:
-            setattr(self, func['name'], self.create_method(func['id']))
+            async def method(*params):
+                await self.run(func_id, *params)
+            setattr(self, func['name'], method)
 
-    def create_method(self, func_id):
-        def method(*params):
-            return self.run(func_id, *params)
-        return method
-    
-    def run(self, func_id, *params):
-        print(f"Running function ID {func_id} with params: {params}")
-        return f"Result of function ID {func_id}"
+    async def run(self, func_id, *params):
 
+        retid = self.retid
+        self.retid += 1
+        packet = encode_function_return(this.functions[funcid], funcid, retid, *params)
 
+        # add to waitlist
+        res = Future()
+        
+        waitlist.push([1, res])
 
-    def spinup():
+        # send packet
+        self.socket.send(packet)
+
+        # wait for waitlist to finish
+        r = await res
+        return r
+        
+    def spinup(self):
         ...
 
 class ReturnData:

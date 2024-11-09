@@ -24,7 +24,7 @@ function initFunCall(byte_array, id, ret) {
     let ret0 = (temp[1] & 0xFF00) >> 8 // first 8 bits
     let ret1 = temp[1] & 0x00FF // last 8 bits
 
-    let data = [Magic.FCALL, place_holder, id0, id1, ret0, ret1]
+    let data = [Magic.FCALL, 0, 0, 0, 0, id0, id1, ret0, ret1]
     return updateByteArrray(byte_array, data)
 }
 

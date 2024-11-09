@@ -25,10 +25,10 @@ function initFunCall(byteArray, id, ret) {
     placeHolder = 0 // don't know byteArray length until end
     // split func id & ret id into two bytes
     let temp = new Uint16Array([id, ret])
-    id0 = temp[0] & 0b1111111100000000 // first 8 bits
-    id1 = temp[0] & 0b0000000011111111 // last 8 bits
-    ret0 = temp[1] & 0b1111111100000000 // first 8 bits
-    ret1 = temp[1] & 0b0000000011111111 // last 8 bits
+    id0 = temp[0] & 0xFF00 // first 8 bits
+    id1 = temp[0] & 0x00FF // last 8 bits
+    ret0 = temp[1] & 0xFF00 // first 8 bits
+    ret1 = temp[1] & 0x00FF // last 8 bits
 
     data = [Magic.FCALL, placeHolder, id0, id1, ret0, ret1]
     return updateByteArray(byteArray, data)
@@ -69,14 +69,24 @@ function encodingParam(params, paramType) {
         switch (paramType[i]) {
             case Magic.INT:
                 if (!(typeof params[i] === 'number')) {
-                    throw new Error("Parameter Type Mismatch.")
+                    throw new Error("Parameter Int Type Mismatch.")
                 }
                 data = intConvHelper(Math.floor(params[i]))
                 byteArray = updateByteArray(byteArray, Magic.INT, data)
                 break;
             case Magic.FLOAT:
+                if (!(typeof params[i] === 'number')) {
+                    throw new Error("Parameter Float Type Mismatch.")
+                }
+                data = floatConvHelper(Math.floor(params[i]))
+                byteArray = updateByteArray(byteArray, Magic.FLOAT, data)
                 break;
             case Magic.STRING:
+                if(!(typeof params[i] === 'string')) {
+                    throw new Error("Parameter String Type Mismatch.")
+                }
+                data = strConvHelper(params[i])
+                byteArray = updateByteArray(byteArray, Magic.STRING, data)
                 break;
             case Magic.ARRAY:
                 recurArrHelper()
@@ -96,9 +106,36 @@ function intConvHelper(num) {
     intArr = new Uint8Array(8)
     for (let i = 0; i < 64; i+=8) {
         // shift to left and mask to keep left most 8 bits
-        intArr[i/8] = Number(temp[0] << (8 * i) & 0xFF) 
+        intArr[i/8] = Number(temp[0] >> (8 * i) & 0xFF) 
     }
     return intArr
+}
+
+function floatConvHelper(num) {
+    // convert int into 64 bits (8 bytes)
+    const temp = new Float64Array([num])
+    floatArr = new Uint8Array(8)
+    for (let i = 0; i < 64; i+=8) {
+        // shift to left and mask to keep left most 8 bits
+        floatArr[i/8] = Number(temp[0] >> (8 * i) & 0xFF) 
+    }
+    return floatArr
+}
+
+function strConvHelper(str) {
+    const temp = new Uint32Array([str.length])
+    strLen = new Uint8Array(4) // srting length -> 4 bytes
+    for (let i = 0; i < 32; i +=4) {
+        strLen[i/4] = Number(temp[0] >> (4 * 1) & 0xFF)
+    }
+    let startIndex = strLen.length
+    strArr = new Uint8Array(4 + str.length)
+    for (char in str.split("")) {
+        // PUMP into strArr the 8-bits chars
+        strArr[startIndex] = String.prototype.codePointAt(char)
+        startIndex += 1
+    }
+    return strArr
 }
 
 function recurArrHelper() {

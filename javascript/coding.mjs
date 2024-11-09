@@ -319,7 +319,9 @@ export function encode_return(retid, value, type) {
     let res = [0xB0, 0, 0, 0, 0]
     res.push((retid & 0xFF00) >> 8)
     res.push(retid & 0xFF)
-    encode_type(res, value, type)
+
+    arr = encodeEachParam(value, type)
+    arr.forEach(a => res.push(a));
 
     let len = res.length - 5
     res[1] = len & 0xFF000000 >> 24

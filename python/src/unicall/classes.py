@@ -102,3 +102,20 @@ class Library:
 
     def spinup():
         ...
+
+class ReturnData:
+    """Represents a returned value ready to be sent back to the client.
+    """
+    def __init__(self, value: any, destination: int):
+        """Initializes a `ReturnData` instance.
+
+        Args:
+            value: A value that we want to return.
+            destination: An integer representing the ID of the call instance.
+        """
+        self.value = value
+        self.destination = destination
+
+class ErrorValue:
+    def __init__(self) -> None:
+        pass

@@ -1,8 +1,10 @@
+from typing import Callable
 from unicall.classes import *
 
+interface: list[tuple[FunctionMeta, Callable]] = []
 # TODO we use magic global in here, please fix max
 def typed(*args, **returns):
-    def meta(function):
+    def meta(library_function):
         def switch(str):
             match str:
                 case 'int':
@@ -17,11 +19,14 @@ def typed(*args, **returns):
                     raise TypeError(f'Unvalid type annotation of: {str}')
   
         arg = list(map(switch, args))
-        print(vars(FunctionMeta(function.__name__, arg, returns['returns'])))
-        return function
+        interface.append((
+            FunctionMeta(
+                name=library_function.__name__,
+                args=arg,
+                return_type=switch(returns['returns'])
+            ),
+            library_function,
+        )
+        )
+        return library_function
     return meta
-
-
-if __name__ == "__main__":
-    # These are test cases for this module.
-    print(load_functions('../../../test/testLib.py'))

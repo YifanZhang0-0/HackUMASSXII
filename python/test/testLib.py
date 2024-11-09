@@ -1,8 +1,10 @@
-from unicall.server.interface import typed
+from unicall.server import typed, serve
 
-@typed('array', 'int', returns='obj')
+@typed('array', 'int', returns='object')
 def hello(comma, counter):
     pass
 
 def world(exclamation):
     pass
+
+serve()

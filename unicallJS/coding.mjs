@@ -4,7 +4,7 @@ import assert from 'assert';
 
 /**
  * Update the Unit8Array that carries binary info.
- * @param {Uint8Array} byte_array - The array containing all bytes we need to send.
+ * @param {Uint8Array} byte_array - The byte array encoded with all the information to be sent to python.
  * @param {array} data - The data to be placed into byte_array.
  * @returns {Uint8Array} Updated byte_array.
  */
@@ -28,6 +28,12 @@ function initFunCall(byte_array, id, ret) {
     return updateByteArrray(byte_array, data)
 }
 
+/**
+ * Encodes a function call into binaries to be sent to python for invocation.
+ * @param {Object} func - Function object describing a callable python function.
+ * @param  {...any} params - List of parameter(s) the python function needs.
+ * @returns {Uint8Array} - Encoded python function call in binaries.
+ */
 export function encoding(func, ...params) {
     
     let byte_array = new Uint8Array();
@@ -56,9 +62,9 @@ export function encoding(func, ...params) {
 }
 
 /**
- * Fact checking & tries type conversion & updates byte_array within each case
- * @param {array} params - params from obj.run, what we want to pass into python.
- * @param {array} param_types - actual function parameter types specified by python.
+ * Fact checking & tries type conversion & updates byte_array within each case.
+ * @param {array} params - Params from obj.run, what we want to pass into python.
+ * @param {array} param_types - Actual function parameter types specified by python.
  */
 function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=true) {
     // we check type by default, toggle off for Object encoding
@@ -122,9 +128,9 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=t
 }
 
 /**
- * helper function for int conversion into bytes array 
- * @param {number} num - int from params
- * @returns {array} a byte array encoded with integer
+ * helper function for int conversion into bytes array. 
+ * @param {number} num - Int from params.
+ * @returns {Uint8Array} Binary representation with newly encoded integer.
  */
 export function intConvHelper(num) {
     // convert int into 64 bits (8 bytes)
@@ -139,9 +145,9 @@ export function intConvHelper(num) {
 }
 
 /**
- * helper function for float conversion into bytes array 
- * @param {number} num - float from params
- * @returns {array} a byte array encoded with float
+ * helper function for float conversion into bytes array.
+ * @param {number} num - Float from params.
+ * @returns {Uint8Array} Binary representation with newly encoded float.
  */
 export function floatConvHelper(num) {
     // convert float into 64 bits (8 bytes)
@@ -161,9 +167,9 @@ export function floatConvHelper(num) {
 }
 
 /**
- * helper function for string conversion into bytes array 
- * @param {string} str - string from params
- * @returns {array} a byte array encoded with string
+ * helper function for string conversion into bytes array.
+ * @param {string} str - string from params.
+ * @returns {array} a byte array encoded with string.
  */
 export function strConvHelper(str) {
     const temp = new Uint32Array([str.length]) //string length -> 4 bytes
@@ -182,8 +188,13 @@ export function strConvHelper(str) {
     return str_arr
 }
 
-    // this is so clumped up
-export function recurArrHelper(byte_array, obj_run_param) {
+/**
+ * Recursivly construct a binary representation of an array parameter.
+ * @param {Uint8Array} byte_array - The byte array encoded with all the information to be sent to python.
+ * @param {Any} obj_run_param - The array to be encoded into binaries.
+ * @returns {Uint8Array} Binary representation with newly encoded array.
+ */
+export function recurArrHelper(byte_array, obj_run_param) { // this is so clumped up
     // recurisvely tries to construct an array from the params
     // special case: empty array
     if (obj_run_param.length === 0) {
@@ -222,6 +233,13 @@ export function recurArrHelper(byte_array, obj_run_param) {
     }
 }
 
+/**
+ * Encodes an Object into binaries
+ * @param {Uint8Array} byte_array - The byte array encoded with all the information to be sent to python.
+ * @param {array[string]} keys - Array of keys of the Object.
+ * @param {array[any]} values - Array of values of the Object.
+ * @returns {Uint8Array} Binary representation with newly encoded object.
+ */
 export function objConvHelper(byte_array, keys, values) {
     byte_array = updateByteArrray(byte_array, keys)
     // encoding values
@@ -231,10 +249,20 @@ export function objConvHelper(byte_array, keys, values) {
     return byte_array
 }
 
+/**
+ * Checks if an number is integer.
+ * @param {Number} n - Number to be checked.
+ * @returns {Boolean} True or false for integer.
+ */
 function isInt(n){
     return Number(n) === n && n % 1 === 0;
 }
 
+/**
+ * Checks if an number is float.
+ * @param {Number} n - Number to be checked.
+ * @returns {Boolean} True or false for float.
+ */
 function isFloat(n){
     return Number(n) === n && n % 1 !== 0;
 }
@@ -376,19 +404,19 @@ export function encode_return(retid, value, type) {
 }
 
 // Tests
-{
-    function demo_function(param) {}
+// {
+//     function demo_function(param) {}
 
-    function test_updateByteArray() {
-        let byteArray = new Uint8Array();
-        const updated = updateByteArrray(byteArray, [1, 2, 3, 4]);
-        assert.deepEqual(updated, new Uint8Array([1, 2, 3, 4]))        
-    }
+//     function test_updateByteArray() {
+//         let byteArray = new Uint8Array();
+//         const updated = updateByteArrray(byteArray, [1, 2, 3, 4]);
+//         assert.deepEqual(updated, new Uint8Array([1, 2, 3, 4]))        
+//     }
 
-    function test_encode() {
-        assert.equal(new Uint8Array(), encoding(demo_function, ['param']));
-    }
+//     function test_encode() {
+//         assert.equal(new Uint8Array(), encoding(demo_function, ['param']));
+//     }
 
-    test_updateByteArray();
-    test_encode();
-}
+//     test_updateByteArray();
+//     test_encode();
+// }

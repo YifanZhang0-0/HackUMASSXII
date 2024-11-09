@@ -1,6 +1,7 @@
 import * as coding from '../coding.mjs';
 import assert from 'assert';
 
+// decode does not seem to decode yet
 
 let test_int_array = coding.intConvHelper(69)
 console.log(test_int_array)

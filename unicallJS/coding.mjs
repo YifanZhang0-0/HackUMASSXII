@@ -371,19 +371,19 @@ export function encode_return(retid, value, type) {
 }
 
 // Tests
-// {
-//     function demo_function(param) {}
+{
+    function demo_function(param) {}
 
-//     function test_updateByteArray() {
-//         let byteArray = new Uint8Array();
-//         updateByteArrray(byteArray, [1, 2, 3, 4]);
-//         assert.equal(byteArray, new Uint8Array([1, 2, 3, 4]))        
-//     }
+    function test_updateByteArray() {
+        let byteArray = new Uint8Array();
+        const updated = updateByteArrray(byteArray, [1, 2, 3, 4]);
+        assert.deepEqual(updated, new Uint8Array([1, 2, 3, 4]))        
+    }
 
-//     function test_encode() {
-//         assert.equal(new Uint8Array(), encoding(demo_function, ['param']));
-//     }
+    function test_encode() {
+        assert.equal(new Uint8Array(), encoding(demo_function, ['param']));
+    }
 
-//     test_updateByteArray();
-//     test_encode();
-// }
+    test_updateByteArray();
+    test_encode();
+}

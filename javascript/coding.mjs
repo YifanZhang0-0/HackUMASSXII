@@ -157,3 +157,37 @@ function recurArrHelper() {
     // TODO 
     // recurisvely tries to construct an array from the params
 }
+
+
+
+
+
+
+
+function decode(arr, s) {
+    // get header
+    const header = arr[s] << 8 + arr[++s]
+    switch(header) {
+        case Magic.INT:
+            let res = 0
+            for (let i=0; i<8; i++) {
+                res += data[s+i] << 8*(8-i)
+            }
+            return res
+        case Magic.FLOAT:
+            break
+        case Magic.STRING:
+            break
+        case Magic.ARRAY:
+            break
+        case Magic.OBJECT:
+            break
+        case Magic.VOID:
+            return undefined
+        case Magic.ERR:
+            throw new Error("runtime error")
+        default:
+            throw new Error(`invalid header for return packet ${header}`)
+    }
+}
+

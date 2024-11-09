@@ -9,8 +9,10 @@ export async function setup_socket(library, socket_name) {
     if (fs.existsSync(socket_name)) fs.rmSync(socket_name)
     const server = net.createServer((socket) => {
       socket.on("readable", () => {
+        console.log("reading")
         // first we have to get the functions
         if (library.functions === undefined) {
+          console.log("writing functions")
           const head = new UInt8Array(socket.read(5))
           // TODO: ASSERT HEAD IS 0xF2
           const length = head[1] << 24 + head[2] << 16 + head[3] << 8 + head[4]
@@ -29,8 +31,10 @@ export async function setup_socket(library, socket_name) {
     })
 
     //first we listen
+    console.log("listening")
     server.listen(socket_name)
     //then we run the server
+    console.log("running server")
     run_server(library.filetype, library.filename, socket_name)
   })
   
@@ -40,15 +44,10 @@ export async function setup_socket(library, socket_name) {
 function run_server(type, file, socket_name) {
   switch (type) {
     case PY:
-      console.log("hello")
-      console.log(file)
-      const my_process = exec(`python ${file} socket=${socket_name}`)
-      my_process.stdout.on('data', function(data) {
-          console.log(data); 
-      });
-      my_process.stderr.on('data', function(data) {
-          console.log(data); 
-      });
+      exec(`python ${file} socket=${socket_name}`, (error, stdout, stderr) => {
+        console.log(stdout)
+      })
+      console.log("execed")
       break;
     default:
       throw new Error("bad language")

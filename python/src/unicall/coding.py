@@ -1,6 +1,64 @@
 import struct
 
+def encode_function_call(functionID, returnID, *args):
+    """
+    Encodes a function call packet with a given functionID, returnID, and arguments.
+    This function formats the packet headers according to the specified structure.
+
+    Parameters:
+    - functionID (int): ID of the function being called.
+    - returnID (int): ID for the return data.
+    - *args: Variable length argument list of function parameters.
+
+    Returns:
+    - bytearray: Encoded function call packet with headers followed by encoded arguments.
+    """
+    # Initialize the header section
+    packet = bytearray()
+    
+    # Magic number for function call
+    packet.extend(b'\xF1')
+    
+    # Placeholder for size of following data (4 bytes, will update later)
+    packet.extend(b'\x00\x00\x00\x00')
+    
+    # Function ID (2 bytes)
+    packet.extend(functionID.to_bytes(2, byteorder='big'))
+    
+    # Return ID (2 bytes)
+    packet.extend(returnID.to_bytes(2, byteorder='big'))
+    
+    # Encode arguments using the original encoding function
+    args_encoded = encoding(*args)  # Calls your original encoding function
+    
+    # Append the encoded arguments to the packet
+    packet.extend(args_encoded)
+    
+    # Calculate the size of the following data (everything after the first 5 bytes)
+    size_of_data = len(packet) - 5  # Exclude the magic number and size placeholder
+    packet[1:5] = size_of_data.to_bytes(4, byteorder='big')
+    
+    return packet
+
+
 def encoding(*args):
+    """
+    Encoding arguments according to the following scheme:
+    A1-int
+    A2-float
+    A3-string
+    A4-Array
+    A5-Object
+    A6-Null/None
+    A7-Error
+    B0-return
+    Encodes each argument
+
+    Additionally, the packet that is sent will have all the headers in sequential order followed by all the arg_bytes 
+    in the same order.
+
+    Returns a byte array that is headers followed by arguements
+    """
     # Ensure input data is at least one argument
     if len(args) < 1:
         raise ValueError("Input data must contain at least one argument")

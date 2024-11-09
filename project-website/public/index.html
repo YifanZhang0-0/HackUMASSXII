@@ -1,17 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project Showcase</title>
-  <link rel="stylesheet" href="src/styles.css">
-  <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smooth Entering Title with Image Showcase</title>
+    <link rel="stylesheet" href="style.css"> <!-- Link to external CSS -->
 </head>
 <body>
-  <h1>Welcome to Our Dope Ass Website</h1>
-  <div id="root"></div>
-  <script type="text/babel" src="src/script.js"></script>
+    <section class="section welcome">
+        <h1 id="smoothTitle" class="title">Welcome to Our Dope Website</h1>
+    </section>
+
+    <section class="section showcase">
+        <div class="image-container">
+            <img id="showcaseImage" class="image-showcase" src="https://picsum.photos/600/400?random=1" alt="Showcase image">
+            <button id="runButton" class="run-button" aria-label="Run showcase">
+                <svg class="run-icon" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+            </button>
+            <div class="image-info">
+                <h2>Image Showcase</h2>
+                <p>Click the "Run" button in the top right corner to see the next image with a smooth transition.</p>
+            </div>
+        </div>
+    </section>
+    <script src="App.js"></script> <!-- Link to external JavaScript -->
 </body>
 </html>
+
+

@@ -75,7 +75,7 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=t
                 throw new Error("Parameter Int Type Mismatch.")
             }
             data = intConvHelper(Math.floor(obj_run_param))
-            data.unshift(Magic.INT)
+            byte_array = updateByteArrray(byte_array, [Magic.INT])
             byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.FLOAT:
@@ -83,7 +83,7 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=t
                 throw new Error("Parameter Float Type Mismatch.")
             }
             data = floatConvHelper(Math.floor(obj_run_param))
-            data.unshift(Magic.FLOAT)
+            byte_array = updateByteArrray(byte_array, [Magic.FLOAT])
             byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.STRING:
@@ -91,7 +91,7 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=t
                 throw new Error("Parameter String Type Mismatch.")
             }
             data = strConvHelper(obj_run_param)
-            data.unshift(Magic.STRING)
+            byte_array = updateByteArrray(byte_array, [Magic.STRING])
             byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.ARRAY:

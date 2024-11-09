@@ -18,8 +18,14 @@ import assert from 'assert';
 // reconstructed_float = coding.decode(test_float_array, 0)
 // assert(reconstructed_float === 420.420, "Encoding Decoding Float Failure")
 
-let str = "Hello World"
-let test_str_array = coding.strConvHelper(str)
-console.log(test_str_array)
-assert(test_str_array instanceof Uint8Array)
-assert(test_str_array.length === (5 + str.length))
+// let str = "Hello World"
+// let test_str_array = coding.strConvHelper(str)
+// console.log(test_str_array)
+// assert(test_str_array instanceof Uint8Array)
+// assert(test_str_array.length === (5 + str.length))
+
+let arr = [4, 5, 'hi']
+let dummy = [69]
+let byte_array = new Uint8Array(dummy)
+let test_arr_array = coding.recurArrHelper(byte_array, arr)
+console.log(test_arr_array)

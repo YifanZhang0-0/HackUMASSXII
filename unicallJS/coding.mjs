@@ -19,9 +19,9 @@ function initFunCall(byte_array, id, ret) {
     let place_holder = 0 // don't know byte_array length until end
     // split func id & ret id into two bytes
     let temp = new Uint16Array([id, ret])
-    let id0 = temp[0] & 0xFF00 // first 8 bits
+    let id0 = (temp[0] & 0xFF00) >> 8 // first 8 bits
     let id1 = temp[0] & 0x00FF // last 8 bits
-    let ret0 = temp[1] & 0xFF00 // first 8 bits
+    let ret0 = (temp[1] & 0xFF00) >> 8 // first 8 bits
     let ret1 = temp[1] & 0x00FF // last 8 bits
 
     let data = [Magic.FCALL, place_holder, id0, id1, ret0, ret1]
@@ -214,7 +214,7 @@ export function recurArrHelper(byte_array, obj_run_param) { // this is so clumpe
         return byte_array
     }
     // none empty array / element
-    for (n in obj_run_param) { 
+    for (let n of obj_run_param) { 
         // singular element
         if (n.length === undefined) { 
             // recognize array element data type
@@ -255,7 +255,7 @@ export function recurArrHelper(byte_array, obj_run_param) { // this is so clumpe
 export function objConvHelper(byte_array, keys, values) {
     byte_array = updateByteArrray(byte_array, keys)
     // encoding values
-    for (val in values) {
+    for (let val of values) { // 'of' gets actual val as opposed to index 
         byte_array = recurArrHelper(byte_array, val)
     }
     return byte_array

@@ -169,13 +169,17 @@ function decode(arr, s) {
     const header = arr[s] << 8 + arr[++s]
     switch(header) {
         case Magic.INT:
-            let res = 0
+            let int = 0
             for (let i=0; i<8; i++) {
-                res += data[s+i] << 8*(8-i)
+                int += data[s+i] << 8*(8-i)
             }
-            return res
+            return int
         case Magic.FLOAT:
-            break
+            let float = new UInt8Array(8)
+            for (let i=0; i<8; i++) {
+                float[i] = data[s+i]
+            }
+            return Float64Array.from(float)[0]
         case Magic.STRING:
             break
         case Magic.ARRAY:

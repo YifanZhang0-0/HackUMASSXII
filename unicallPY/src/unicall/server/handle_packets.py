@@ -24,7 +24,7 @@ async def handle_packet(
         return_id: The id to return to.
         function_id: The function to run.
     """
-    print("HAIHDWIHWD")
+    print(socket, return_id, function_id, args)
     _metadata, func = interface.interface[function_id]
     return_value = None
     if (asyncio.iscoroutinefunction(func)):
@@ -50,13 +50,17 @@ def serve():
 
 
     async def inner():
-        die = 0
-        print("hi2")
-        while die < 1000:
+        while True:
             data = bytes()
             data += socket_to_client.recv(5)
+            if data == b'':
+                # we must die
+                break
+            
+            print(data)
             remaining_length = int.from_bytes(data[1:5], 'big')
             data += socket_to_client.recv(remaining_length)
+            print(data)
         
             function_id, return_id, arguments = coding.decode_function_request(data)
             print("hi6")
@@ -74,5 +78,4 @@ def serve():
                 # *arguments,
             # ))
             print("hi7")
-            die += 1
     asyncio.run(inner())

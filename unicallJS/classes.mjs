@@ -43,9 +43,7 @@ export class Library {
     await setup_socket(this, `/tmp/${this.filename}.sock`)
     
     for (const func of this.functions) {
-      this[func.name] = async (...params) => {
-        await this.run(func.id, ...params)
-      }
+      this[func.name] = async (...params) => await this.run(func.id, ...params)
     }
   }
 
@@ -60,11 +58,8 @@ export class Library {
     // send the byte array off
     console.log("sending", bytes)
     this.socket.write(bytes)
-    console.log("sent")
     // wait to get sent notified for the correct thing
-    let retvalue = await wait
-    console.log("got wait back")
-    return retvalue
+    return await wait
   }
 
   close() {

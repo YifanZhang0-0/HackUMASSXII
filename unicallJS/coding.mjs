@@ -315,55 +315,55 @@ function isFloat(n){
 
 
 
-
-
 export function decode(arr, s) {
     return _decode(arr, s)[0]
 }
 
 function _decode(arr, s) {
+    console.log(arr, s)
     // get header
-    const header = (arr[s++] << 8) + arr[s++]
+    const header = arr[s++]
+    console.log("h",header)
     switch(header) {
         case Magic.INT:
             let int = 0
             for (let i=0; i<8; i++) {
-                int += (data[s+i] << 8*(8-i))
+                int += (arr[s+i] << 8*(7-i))
             }
             return [int, 9]
         case Magic.FLOAT:
             let float = new Uint8Array(8)
             for (let i=0; i<8; i++) {
-                float[i] = data[s+i]
+                float[i] = arr[s+i]
             }
             return [Float64Array.from(float)[0], 9]
         case Magic.STRING:
-            let slen = (data[s++] << 24) + (data[s++] << 16) + (data[s++] << 8) + data[s++]
+            let slen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
             let string = ""
             for (let i=s; i<slen+s; i++) {
-                string += String.fromCharCode(data[i])
+                string += String.fromCharCode(arr[i])
             }
             return [string, 5+slen]
         case Magic.ARRAY:
-            let alen = (data[s++] << 24) + (data[s++] << 16) + (data[s++] << 8) + data[s++]
+            let alen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
             let array = []
             for (let i=0; i<alen; i++) {
-                let [val, size] = _decode(data, s)
+                let [val, size] = _decode(arr, s)
                 s += size
                 array.push(val)
             }
             return array
         case Magic.OBJECT:
-            let olen = (data[s++] << 24) + (data[s++] << 16) + (data[s++] << 8) + data[s++]
+            let olen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
             let strings = []
             let object = {}
             for (let i=0; i<olen; i++) {
-                let [str, len] = _decode(data, s)
+                let [str, len] = _decode(arr, s)
                 strings.push(str)
                 s += len
             }
             for (let i=0; i<olen; i++) {
-                let [val, len] = _decode(data, s)
+                let [val, len] = _decode(arr, s)
                 object[strings[i]] = val
                 s += len
             }

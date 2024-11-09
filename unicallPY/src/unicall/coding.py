@@ -162,7 +162,7 @@ def encode_return_data(return_data: ReturnData) -> bytes:
     """Encodes a `ReturnData` instance as a byte string.
     """
     output = bytes()
-    output += return_data.destination.to_bytes(4, "big")
+    output += return_data.destination.to_bytes(2, "big")
     output += encoding(return_data.value)
     output = len(output).to_bytes(4, "big") + output
     output = b"\xb0" + output

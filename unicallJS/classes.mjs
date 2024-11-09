@@ -39,7 +39,7 @@ export class Library {
 
   async load() {
     
-    await setup_socket(this, `/tmp/${filename}.sock`)
+    await setup_socket(this, `/tmp/${this.filename}.sock`)
     for (func of functions) {
       this[func.name] = (...params) => {
         this.run(func.id, ...params)

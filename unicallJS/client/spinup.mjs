@@ -1,10 +1,7 @@
 import * as net from "net"
 import * as fs from "fs"
 import { exec } from "child_process"
-import { PY, JS } from "../coding.mjs"
-import { Function } from "../classes.mjs"
-
-import { Magic } from "../magic.mjs"
+import { Function, PY } from "../classes.mjs"
 
 export async function setup_socket(library, socket_name) {
   const function_def_finished = new Promise((res, _) => {

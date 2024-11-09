@@ -1,5 +1,6 @@
 import { encode } from 'punycode';
 import { Magic } from './magic.mjs';
+import assert from 'assert';
 
 /**
  * Update the Unit8Array that carries binary info.
@@ -13,7 +14,7 @@ function updateByteArrray(byte_array, data) {
     let new_byte_array = new Uint8Array(byte_array.length + data.length)
     new_byte_array.copy(byte_array)
 
-    for (d in data) {
+    for (d of data) {
         new_byte_array.set([d], start_index)
         start_index += 1
     }
@@ -41,7 +42,7 @@ export function encoding(func, ...params) {
     param_types = func.types // strings of the type itself
     ret = func.ret
     id = func.id
-    func_name = func.name 
+    func_name = func.name
 
     // count checking
     try {
@@ -375,5 +376,20 @@ export function encode_return(retid, value, type) {
     return UInt8Array(res)
 }
 
+// Tests
+{
+    function demo_function(param) {}
 
+    function test_updateByteArray() {
+        let byteArray = new Uint8Array();
+        updateByteArrray(byteArray, [1, 2, 3, 4]);
+        assert.equal(byteArray, new Uint8Array([1, 2, 3, 4]))        
+    }
 
+    function test_encode() {
+        assert.equal(new Uint8Array(), encoding(demo_function, ['param']));
+    }
+
+    test_updateByteArray();
+    test_encode();
+}

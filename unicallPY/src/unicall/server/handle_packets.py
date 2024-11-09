@@ -15,7 +15,7 @@ async def handle_packet(
     socket: socket.socket,
     return_id: int,
     function_id: int,
-    *args: list[1]
+    *args
 ):
     """Handles a single packet request
 
@@ -24,8 +24,15 @@ async def handle_packet(
         return_id: The id to return to.
         function_id: The function to run.
     """
+    print("HAIHDWIHWD")
     _metadata, func = interface.interface[function_id]
-    return_value = await func(*args)
+    return_value = None
+    if (asyncio.iscoroutinefunction(func)):
+        return_value = await func(*args)
+    else:
+        return_value = func(*args)
+
+    print("HAIHDWIHWD")
     socket.send(classes.ReturnData(
         value=return_value,
         destination=return_id,
@@ -39,21 +46,24 @@ def serve():
         raise "Bad"
     socket_to_client.connect(sys.argv[1][7:])
     writeback.write_back(socket_to_client=socket_to_client)
-    print("HI")
+    print("HII")
 
     async def inner():
         print("hi2")
         while True:
             data = bytes()
-            data += await socket_to_client.recv(5)
+            data += socket_to_client.recv(5)
             remaining_length = int.from_bytes(data[1:5], 'big')
-            data += await socket_to_client.recv(remaining_length)
-            
+            data += socket_to_client.recv(remaining_length)
+        
             function_id, return_id, arguments = coding.decode_function_request(data)
-            handle_packet(
+            print("hi6")
+
+            asyncio.create_task(handle_packet(
                 socket=socket_to_client,
                 return_id=return_id,
                 function_id=function_id,
                 *arguments,
-            )
+            ))
+            print("hi7")
     asyncio.run(inner())

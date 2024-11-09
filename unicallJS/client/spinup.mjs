@@ -51,11 +51,7 @@ export async function setup_socket(library, socket_name) {
 function run_server(type, file, socket_name) {
   switch (type) {
     case PY:
-      exec(`python ${file} socket=${socket_name}`, (error, stdout, stderr) => {
-        console.log(stdout)
-        // console.error(error)
-        // console.error(stderr)
-      })
+      exec(`python ${file} socket=${socket_name} > out`)
       break;
     default:
       throw new Error("bad language")

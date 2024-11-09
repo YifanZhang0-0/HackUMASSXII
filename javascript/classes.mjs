@@ -18,7 +18,7 @@ class Library {
   constructor(filename, filetype) {
     this.filename = filename
     this.filetype = filetype
-    this.functions = [] // list of functions populated by load
+    this.functions = undefined // list of functions populated by load
   }
 
   load() {

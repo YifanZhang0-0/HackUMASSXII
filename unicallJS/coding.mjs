@@ -16,7 +16,6 @@ function updateByteArrray(byte_array, data) {
 }
 
 function initFunCall(byte_array, id, ret) {
-    let place_holder = 0 // don't know byte_array length until end
     // split func id & ret id into two bytes
     let temp = new Uint16Array([id, ret])
     let id0 = (temp[0] & 0xFF00) >> 8 // first 8 bits
@@ -34,14 +33,12 @@ function initFunCall(byte_array, id, ret) {
  * @param  {...any} params - List of parameter(s) the python function needs.
  * @returns {Uint8Array} - Encoded python function call in binaries.
  */
-export function encoding(func, ...params) {
+export function encoding(func, retid, ...params) {
     
     let byte_array = new Uint8Array();
     // func is func obj
     let param_types = func.types // strings of the type itself
-    let ret = func.ret
     let id = func.id
-    let func_name = func.name 
 
     // count checking
     if(!(params.length === param_types.length)) {
@@ -49,7 +46,7 @@ export function encoding(func, ...params) {
     }
 
     // encoding function headers & metadata & ids into byte_array
-    byte_array = initFunCall(byte_array, id, ret)
+    byte_array = initFunCall(byte_array, id, retid)
 
     // encoding parameters into byteArra
     for (let i = 0; i < param_types.length; i++) {
@@ -57,6 +54,12 @@ export function encoding(func, ...params) {
         let func_param_type = param_types[i]
         byte_array = encodeEachParam(byte_array, obj_run_param, func_param_type)
     }
+
+    let len = byte_array.length - 5
+    byte_array[1] = (len & 0xFF000000) >> 24
+    byte_array[2] = (len & 0xFF0000) >> 16
+    byte_array[3] = (len & 0xFF00) >> 8
+    byte_array[4] = (len & 0xFF)
 
     return byte_array
 }
@@ -75,7 +78,7 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=t
                 throw new Error("Parameter Int Type Mismatch.")
             }
             data = intConvHelper(Math.floor(obj_run_param))
-            byte_array = updateByteArrray(byte_array, [Magic.INT])
+            // byte_array = updateByteArrray(byte_array, [Magic.INT])
             byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.FLOAT:
@@ -83,7 +86,7 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=t
                 throw new Error("Parameter Float Type Mismatch.")
             }
             data = floatConvHelper(Math.floor(obj_run_param))
-            byte_array = updateByteArrray(byte_array, [Magic.FLOAT])
+            // byte_array = updateByteArrray(byte_array, [Magic.FLOAT])
             byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.STRING:
@@ -91,7 +94,7 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=t
                 throw new Error("Parameter String Type Mismatch.")
             }
             data = strConvHelper(obj_run_param)
-            byte_array = updateByteArrray(byte_array, [Magic.STRING])
+            // byte_array = updateByteArrray(byte_array, [Magic.STRING])
             byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.ARRAY:

@@ -84,10 +84,10 @@ def process_return(library, data):
     value = decode(data[s:])  # Assuming a decode function that handles data
 
     idx = -1
-    for i, (rid, callback) in enumerate(library.waitlist):
+    for i, (rid, future) in enumerate(library.waitlist):
         if rid == retid:
             idx = i
-            callback(value)
+            future.resolve(value)
             break
 
     if idx == -1:

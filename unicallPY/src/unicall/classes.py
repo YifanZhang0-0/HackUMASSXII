@@ -1,5 +1,11 @@
 from enum import IntEnum
 from asyncio import Future
+import os, os.path
+import subprocess
+
+PY="python"
+JS="javascript"
+
 
 class TypeMeta(IntEnum):
     """Represents the numbering scheme that we use to denote types.
@@ -114,9 +120,7 @@ class Library:
         # wait for waitlist to finish
         r = await res
         return r
-        
-    def spinup(self):
-        ...
+       
 
 class ReturnData:
     """Represents a returned value ready to be sent back to the client.

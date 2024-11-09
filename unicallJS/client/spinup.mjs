@@ -37,9 +37,6 @@ export async function setup_socket(library, socket_name) {
         const data = new Uint8Array(socket.read(length))
         process_return(library, data, length)
       })
-
-      // socket.on("close", () => console.log("closed"))
-      // socket.on("end", () => console.log("end stream"))
     })
 
     //first we listen
@@ -56,6 +53,8 @@ function run_server(type, file, socket_name) {
     case PY:
       exec(`python ${file} socket=${socket_name}`, (error, stdout, stderr) => {
         console.log(stdout)
+        // console.error(error)
+        // console.error(stderr)
       })
       break;
     default:

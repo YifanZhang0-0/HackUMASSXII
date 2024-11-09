@@ -42,6 +42,7 @@ def serve():
     print("HI")
 
     async def inner():
+        print("hi2")
         while True:
             data = bytes()
             data += await socket_to_client.recv(5)

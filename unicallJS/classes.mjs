@@ -52,7 +52,7 @@ export class Library {
   async run(id, ...params) {
     let retid = this.ret++
 
-    let bytes = encoding(this.functions[id], ...params)
+    let bytes = encoding(this.functions[id], retid, ...params)
     
     const wait = new Promise((res, _rej) => {
       this.waitlist.push([retid, res])
@@ -60,6 +60,7 @@ export class Library {
     // send the byte array off
     console.log("sending", bytes)
     this.socket.write(bytes)
+    console.log("sent")
     // wait to get sent notified for the correct thing
     let retvalue = await wait
     console.log("got wait back")

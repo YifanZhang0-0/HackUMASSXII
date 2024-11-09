@@ -1,3 +1,4 @@
+import { encode } from 'punycode';
 import { Magic } from './magic.mjs';
 
 /**
@@ -78,14 +79,14 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=T
             byte_array = updateByteArrray(byte_array, Magic.INT, data)
             return byte_array;
         case Magic.FLOAT:
-            if (!(typeof obj_run_param === 'number')) {
+            if (checkType && !(typeof obj_run_param === 'number')) {
                 throw new Error("Parameter Float Type Mismatch.")
             }
             data = floatConvHelper(Math.floor(obj_run_param))
             byte_array = updateByteArrray(byte_array, Magic.FLOAT, data)
             return byte_array;
         case Magic.STRING:
-            if(!(typeof obj_run_param === 'string')) {
+            if(checkType && !(typeof obj_run_param === 'string')) {
                 throw new Error("Parameter String Type Mismatch.")
             }
             data = strConvHelper(obj_run_param)
@@ -114,7 +115,9 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=T
                 temp_obj_arr[i/4 + 1] = Number(temp_obj_len[0] >> (8 * 1) & 0xFF)
             }
             // encode each of the attributes within object
-            byte_array = objConvHelper()
+            // get obj key & values
+            keys, values = Object.entries(obj_run_param)
+            byte_array = objConvHelper(byte_array, keys, values)
             return byte_array;
         case Magic.VOID:
             byte_array = updateByteArrray(byte_array, [Magic.VOID])
@@ -193,22 +196,25 @@ function recurArrHelper(byte_array, obj_run_param) {
         // singular element
         if (n.length === undefined) { 
             // recognize array element data type
+            // no type checking
             if (isInt(n)) {
-                byte_array = encodeEachParam(byte_array, n, Magic.INT)
+                byte_array = encodeEachParam(byte_array, n, Magic.INT, false)
                 return byte_array
             } else if (isFloat(n)) {
-                byte_array = encodeEachParam(byte_array, n, Magic.FLOAT)
+                byte_array = encodeEachParam(byte_array, n, Magic.FLOAT, false)
                 return byte_array
             } else if (typeof n === 'string') {
-                byte_array = encodeEachParam(byte_array, n, Magic.STRING)
+                byte_array = encodeEachParam(byte_array, n, Magic.STRING, false)
                 return byte_array
-            } else if (true) {
-                // TODO 
+            } else if (typeof x === 'object' && !Array.isArray(x) && x !== null) {
                 // object 
-                break;
+                keys, values = Object.entries(n)
+                byte_array = objConvHelper(byte_array, keys, values)
+                return byte_array
             } else {
-                // TODO 
-                // void type?
+                // VOID type
+                byte_array = encodeEachParam(byte_array, n, Magic.VOID)
+                return byte_array
             }
         } else {
             return recurArrHelper(byte_array, n)
@@ -216,8 +222,12 @@ function recurArrHelper(byte_array, obj_run_param) {
     }
 }
 
-function objConvHelper(byte_array, obj_run_param) {
-
+function objConvHelper(byte_array, keys, values) {
+    byte_array = updateByteArrray(byte_array, keys)
+    // encoding values
+    for (val in values) {
+        byte_array = recurArrHelper(byte_array, val)
+    }
     return byte_array
 }
 

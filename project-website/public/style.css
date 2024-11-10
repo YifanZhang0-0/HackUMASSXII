@@ -175,6 +175,7 @@ body, html {
   background-color: #fff; 
   color: #333;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 3px 3px 3px white;
 }
 
 /* Hover effect for text areas */
@@ -217,7 +218,7 @@ body, html {
 
 .console-group label {
   text-align: left;
-  font-size: 1rem;
+  font-size: 1.2rem;
   color: White;
 }
 
@@ -261,27 +262,13 @@ body, html {
   cursor: pointer;
   transition: background-color 0.3s ease;
   margin-top: 0;
+  box-shadow: 2px 2px darkred, -0.1em 0 .6em blue;
 }
 
 .Execute:hover {
   background-color: #555;
 }
 
-
-/* Keyframes for fade-in animation */
-/* @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.animated {
-  animation: fadeIn 1s ease-out forwards;
-} */
 
 /* Apply animation to the text areas */
 .text-area, .console-area {
@@ -304,7 +291,7 @@ body, html {
   display: flex;
   justify-content: center; /* Center the buttons horizontally */
   align-items: center;
-  background-color: #333; /* Dark background color */
+  background-color: #212121; /* Dark background color */
   padding: 1rem; /* Add padding for spacing */
   position: fixed; /* Fix it to the top */
   top: 0;
@@ -337,32 +324,6 @@ body, html {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Optional shadow for depth */
 }
 
-/* Dropdown CSS
-.dropdown {
-  display: inline-block;
-  position: relative;
-}
-.dropdown-content {
-  display: none;
-  position: absolute;
-  width: 100%;
-  overflow: auto;
-  box-shadow: 0px 10px 10px 0px rgba(0,0,0,0.4);
-}
-.dropdown:hover .dropdown-content {
-  display: block;
-}
-.dropdown-content a {
-  display: block;
-  color: #000000;
-  padding: 5px;
-  text-decoration: none;
-}
-.dropdown-content a:hover {
-  color: #FFFFFF;
-  background-color: #00A4BD;
-} */
-
 /* Container for label and dropdown */
 .label-dropdown-container {
   display: flex;
@@ -378,6 +339,7 @@ body, html {
   font-size: 1rem;
   color: white;
   margin-right: -45px; /* Adjust spacing between label and dropdown */
+  
 }
 
 
@@ -407,6 +369,7 @@ body, html {
   margin-bottom: 5px; /* Adds space below the label */
   text-transform: uppercase; /* Makes the label text uppercase */
   letter-spacing: 1px; /* Adds space between letters for a modern look */
+  text-shadow: 1px 1px gold;
 }
 
 /* Specific styling adjustments for Console Output label */

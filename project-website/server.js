@@ -38,7 +38,7 @@ app.post("/runlocal", async function (req, res) {
     output.push(a.join(" "));
   }
   try {
-    eval(`(async () => {${req.body.js}; console.log=_log; res.json({ text: output.join("\\n") })})();`);
+    eval(`(async()=>{try{${req.body.js}}catch(e){console.log=_log;res.json({text:e.toString()})};console.log=_log;res.json({ text: output.join("\\n") })})();`);
   }
   catch (e) {
     res.json({ text: e.toString() })

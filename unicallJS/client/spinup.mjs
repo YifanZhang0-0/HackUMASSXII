@@ -6,6 +6,7 @@ import { strict as assert } from "assert"
 import { decode } from "../coding.mjs"
 import { Magic } from "../magic.mjs"
 
+
 export async function setup_socket(library, socket_name) {
   const function_def_finished = new Promise((res, _) => {
 
@@ -89,9 +90,9 @@ function get_function(list, data, s) {
 function process_return(library, data) {
   let s=0
   const retid = (data[s++] << 8) + data[s++]
-  console.log("RECIEVED ENCODED DATA: ", data)
+  console.info("RECIEVED ENCODED DATA: ", data)
   const value = decode(data, 2)
-  console.log("RET VALUE", value)
+  console.info("RET VALUE", value)
 
   let idx;
   library.waitlist.forEach((a, i) => {

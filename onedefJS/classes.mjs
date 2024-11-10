@@ -3,6 +3,7 @@ import { setup_socket } from "./client/spinup.mjs"
 
 export const PY="python"
 export const JS="javascript"
+export const C="c"
 
 // function definition
 export class Function {

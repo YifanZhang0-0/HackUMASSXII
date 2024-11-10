@@ -1,4 +1,6 @@
 #include <stddef.h>
+#include "./unicall_functions.h"
+
 #define PARENS ()
 
 #define EXPAND(...) EXPAND4(EXPAND4(EXPAND4(EXPAND4(__VA_ARGS__))))
@@ -14,6 +16,13 @@
   __VA_OPT__(, FOR_EACH_AGAIN PARENS (macro, __VA_ARGS__))
 #define FOR_EACH_AGAIN() FOR_EACH_HELPER
 
+#define FOR_EACH_MANIF(macro, ...)                                    \
+  __VA_OPT__(EXPAND(FOR_EACH_HELPER_MANIF(macro, __VA_ARGS__)))
+#define FOR_EACH_HELPER_MANIF(macro, a1, ...)                         \
+  #a1                                                     \
+  __VA_OPT__(, FOR_EACH_AGAIN_MANIF PARENS (macro, __VA_ARGS__))
+#define FOR_EACH_AGAIN_MANIF() FOR_EACH_HELPER_MANIF
+
 #define FOR_EACH_STMT(macro, ...)                                    \
   __VA_OPT__(EXPAND(FOR_EACH_HELPER_STMT(macro, __VA_ARGS__)))
 #define FOR_EACH_HELPER_STMT(macro, a1, ...)                         \
@@ -21,32 +30,16 @@
   __VA_OPT__(, FOR_EACH_AGAIN_STMT PARENS (macro, __VA_ARGS__))
 #define FOR_EACH_AGAIN_STMT() FOR_EACH_HELPER_STMT
 
-struct fancy_return_type{
-  void* start;
-  size_t length;
-  char* type;
-  //TODO
-};
-
-void *decode_request_data(void **read_head, char *type_label){
-  //TODO
-}
-
-fancy_return_type encode_return_type(void *data, char *type_label){
-  //TODO
-}
-
-size_t* manifest_items[512];
-size_t manifest_item_lengths[512];
-struct fancy_return_type (*manifest_callbacks[512])(void*);
-size_t manifest_length = 0;
-void append_to_manifest(size_t* manifest_item, size_t length, struct fancy_return_type (*callback)(void*) ){
-    manifest_items[manifest_length] = manifest_item;
+int append_to_manifest(const char *func_name, const char *return_type, const char** arg_types, size_t length, struct fancy_return_type (*callback)(void*)){
+    manifest_names[manifest_length] = func_name;
+    manifest_returns[manifest_length] = return_type;
+    manifest_items[manifest_length] = arg_types;
     manifest_item_lengths[manifest_length] = length;
     manifest_length++;
+    return 0;
 }
 
-#define MANIFEST_ITEM(...) {FOR_EACH(sizeof, __VA_ARGS__)}
+#define MANIFEST_ITEM(...) {FOR_EACH_MANIF(IGNORE_ME, __VA_ARGS__)}
 
 #define CAT(a, ...) PRIMITIVE_CAT(a, __VA_ARGS__)
 #define PRIMITIVE_CAT(a, ...) a ## __VA_ARGS__
@@ -56,9 +49,11 @@ struct fancy_return_type CAT(_unique_func_, __LINE__)(void* data){ \
   return_type retval = func_name ( FOR_EACH_STMT(IGNORE, __VA_ARGS__) ); \
   return encode_return_data((void *)&retval, #return_type); \
 } \
-int CAT(_unique_arr_, __LINE__)[] = MANIFEST_ITEM(__VA_ARGS__); \
+const char * CAT(_unique_arr_, __LINE__)[] = MANIFEST_ITEM(__VA_ARGS__); \
 int CAT(_unique_, __LINE__) = \
 append_to_manifest( \
+  #func_name, \
+  #return_type, \
   CAT(_unique_arr_, __LINE__), \
   sizeof(CAT(_unique_arr_, __LINE__)) / sizeof(size_t), \
   &CAT(_unique_func_, __LINE__) \

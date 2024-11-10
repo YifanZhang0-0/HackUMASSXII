@@ -2428,12 +2428,20 @@ extern "C++" const char *basename (const char *__filename)
 # 5 "././unicall_functions.h" 2
 
 
-# 6 "././unicall_functions.h"
+
+# 7 "././unicall_functions.h"
+const char* manifest_names[512];
+const char* manifest_returns[512];
 const char** manifest_items[512];
 size_t manifest_item_lengths[512];
 struct fancy_return_type (*manifest_callbacks[512])(void*);
 size_t manifest_length = 0;
-const char* manifest_names[512];
+
+char string_to_type(const char* name){
+  if(strcmp(name, "int") != 0) return 0xA1;
+  if(strcmp(name, "float") != 0) return 0xA2;
+  if(strcmp(name, "char*") != 0) return 0xA3;
+}
 
 struct fancy_return_type{
   void* start;
@@ -2446,7 +2454,7 @@ void *decode_request_data(void **read_head, const char *type_label){
 
 }
 
-fancy_return_type encode_return_data(void *data, const char *type_label){
+struct fancy_return_type encode_return_data(void *data, const char *type_label){
 
 }
 
@@ -2467,6 +2475,8 @@ void send_manifest(int socket_id){
 
     for(int i = 0; i < manifest_length; i++){
         int name_len = strlen(manifest_names[i]);
+        char return_type = string_to_type(manifest_returns[i]);
+        int arg_count = manifest_item_lengths[i];
         buffer[head++] = (i >> 1) & 0xFF;
         buffer[head++] = (i >> 0) & 0xFF;
         buffer[head++] = (name_len >> 1) & 0xFF;
@@ -2474,8 +2484,14 @@ void send_manifest(int socket_id){
         for(int j = 0; j < name_len; j++){
             buffer[head++] = manifest_names[i][j];
         }
-
+        buffer[head++] = return_type;
+        buffer[head++] = (arg_count >> 1) & 0xFF;
+        buffer[head++] = (arg_count >> 0) & 0xFF;
+        for(int j = 0; j < arg_count; j++){
+            buffer[head++] = string_to_type(manifest_items[i][j]);
+        }
     }
+    send(socket_id, buffer, total_length, 0);
 }
 
 void server_init(char *socket_location){
@@ -2484,13 +2500,13 @@ void server_init(char *socket_location){
  struct sockaddr_un remote;
 
  if( (sock = socket(
-# 60 "././unicall_functions.h" 3 4
+# 76 "././unicall_functions.h" 3 4
                    1
-# 60 "././unicall_functions.h"
+# 76 "././unicall_functions.h"
                           , 
-# 60 "././unicall_functions.h" 3 4
+# 76 "././unicall_functions.h" 3 4
                             SOCK_STREAM
-# 60 "././unicall_functions.h"
+# 76 "././unicall_functions.h"
                                        , 0)) == -1 )
  {
   printf("Client: Error on socket() call \n");
@@ -2498,9 +2514,9 @@ void server_init(char *socket_location){
  }
 
  remote.sun_family = 
-# 66 "././unicall_functions.h" 3 4
+# 82 "././unicall_functions.h" 3 4
                     1
-# 66 "././unicall_functions.h"
+# 82 "././unicall_functions.h"
                            ;
  strcpy(remote.sun_path, socket_location);
  data_len = strlen(remote.sun_path) + sizeof(remote.sun_family);
@@ -2511,13 +2527,16 @@ void server_init(char *socket_location){
   printf("Client: Error on connect call \n");
   return;
  }
+ printf("Successfully connected!\n");
+  send_manifest(sock);
 }
 # 3 "./unicall.h" 2
 # 33 "./unicall.h"
 int append_to_manifest(const char *func_name, const char *return_type, const char** arg_types, size_t length, struct fancy_return_type (*callback)(void*)){
+    manifest_names[manifest_length] = func_name;
+    manifest_returns[manifest_length] = return_type;
     manifest_items[manifest_length] = arg_types;
     manifest_item_lengths[manifest_length] = length;
-    manifest_names[manifest_length] = func_name;
     manifest_length++;
     return 0;
 }
@@ -2531,9 +2550,10 @@ struct fancy_return_type _unique_func_7(void* data){ float retval = square ( *((
 
 int main(int argc, char *argv[]){
     printf("function: %s\n", manifest_names[0]);
+    printf("socket: %s\n", argv[1]);
     if(argc < 2){
         printf("Usage test <socket name>");
         return 1;
     }
-    server_init(argv[1]);
+    server_init(argv[1] + 7);
 }

@@ -1,7 +1,7 @@
 import * as net from "net"
 import * as fs from "fs"
 import { exec } from "child_process"
-import { Function, PY } from "../classes.mjs"
+import { Function, PY, C } from "../classes.mjs"
 import { strict as assert } from "assert"
 import { decode } from "../coding.mjs"
 import { Magic } from "../magic.mjs"
@@ -52,6 +52,9 @@ function run_server(type, file, socket_name) {
   switch (type) {
     case PY:
       exec(`python3 ${file} socket=${socket_name} > /tmp/onedef 2>&1`)
+      break;
+    case C:
+      exec(`./${file} socket=${socket_name} > /tmp/onedef 2>&1`)
       break;
     default:
       throw new Error("bad language")

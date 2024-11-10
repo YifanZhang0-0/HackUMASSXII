@@ -19,12 +19,15 @@ export async function setup_socket(library, socket_name) {
           const read = socket.read(5)
           if (read == null) return
           const head = new Uint8Array(read)
+          console.log("Head:", head)
 
           assert.equal(head[0], Magic.FDEF)
           const length = (head[1] << 24) + (head[2] << 16) + (head[3] << 8) + head[4]
           const data = new Uint8Array(socket.read(length))
 
           get_functions(library, data, length)
+
+          console.log("Functions:", library.functions)
           return res()
         }
 

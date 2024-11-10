@@ -30,16 +30,14 @@ export function serve(...functions) {
 
   // now listen for function calls
   socket.on("readable", async () => {
-    console.log(socket)
     const head = new Uint8Array(socket.read(5))
-    console.log("Received data:", head)
+    if(head.length === 0) return;
     const length =
       (head[1] << 24) +
       (head[2] << 16) +
       (head[3] << 8)  +
       (head[4])
     const data = new Uint8Array(socket.read(length))
-    console.log("Received data:", data)
     call_function(data, funclist, socket, length)
   })
 }

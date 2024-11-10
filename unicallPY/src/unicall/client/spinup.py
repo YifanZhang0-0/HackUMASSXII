@@ -48,7 +48,6 @@ async def setup_socket(
     library.socket = conn
     manifest_future = asyncio.Future(loop=event_loop)
     asyncio.create_task(listen_loop(conn, library, manifest_future, event_loop))
-    print(manifest_future.get_loop())
     await manifest_future
 
 async def listen_loop(
@@ -61,16 +60,12 @@ async def listen_loop(
         header = bytes()
         while len(header) != 5:
             header += await event_loop.sock_recv(sock, 5 - len(header))
-        print("Received header:")
-        print(header.hex())
 
         msg_type = header[0]
         length = (header[1] << 24) + (header[2] << 16) + (header[3] << 8) + header[4]
         data = bytes()
         while len(data) != length:
             data += await event_loop.sock_recv(sock, length - len(data))
-        print("Received data:")
-        print(data.hex())
         # Handle function definitions or return data based on msg_type
         if msg_type == 0xF2:
             get_functions(library, data)

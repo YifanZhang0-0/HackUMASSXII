@@ -1,16 +1,21 @@
 const express = require('express');
 const path = require('path');
 
+onedef = undefined 
+stuff = {};
 
-// const lib = require("../unicallJS/client/load")
-// const stuff = {
-  // "test.py": lib.loadPY("test.py")
-// }
+(async () => {
+onedef = await import("../onedefJS/client/load.mjs")
+stuff["test.py"]=await onedef.loadPY("test.py")
+console.log(stuff["test.py"])
+// stuff["llm.py"]=await onedef.loadPY("llm.py")
+// console.log(stuff["llm.py"])
+})();
 
 
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
@@ -21,20 +26,18 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.post("/runlocal", (req, res) => {
+app.post("/runlocal", async function (req, res) {
 
-  console.log(req.body.file)
-  console.log(req.body.js)
-
-  let obj = stuff[req.body.file]
-  eval(req.body.js)
-  
-
-  res.json({ text: "hi" })
-  
-  
+  console.log("running js")
+  let output = []
+  let obj=stuff[req.body.file]
+  let _log = console.log
+  console.log = (...a) => {
+    _log(a)
+    output.push(a.join(" "));
+  }
+  eval(`(async () => {${req.body.js}; console.log=_log; res.json({ text: output.join(" ") })})();`);
 })
-
 
 
 

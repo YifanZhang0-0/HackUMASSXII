@@ -42,20 +42,14 @@ async def setup_socket(
 
     # Accept and handle connections
     conn, _ = server_socket.accept()
+    conn.setblocking(False)
     event_loop = asyncio.get_event_loop()
     asyncio.set_event_loop(event_loop)
     library.socket = conn
     manifest_future = asyncio.Future(loop=event_loop)
     asyncio.create_task(listen_loop(conn, library, manifest_future, event_loop))
-    print("KILL")
-    await asyncio.sleep(1.0)
-    print("ME")
     print(manifest_future.get_loop())
-    # manifest_future.set_result(True)
-    print("X")
-    # manifest_future.set_result(1)
     await manifest_future
-    print("Y")
 
 async def listen_loop(
     sock: socket.socket,
@@ -64,19 +58,16 @@ async def listen_loop(
     event_loop: asyncio.AbstractEventLoop
 ):
     while True:
-        await asyncio.sleep(3)
-        header = await event_loop.sock_recv(sock, 5)
-        if not header:
-            break
-        
-        # Parse header to check message type and length
-        print("Received header")
+        header = bytes()
+        while len(header) != 5:
+            header += await event_loop.sock_recv(sock, 5 - len(header))
+        print("Received header:")
         print(header.hex())
+
         msg_type = header[0]
         length = (header[1] << 24) + (header[2] << 16) + (header[3] << 8) + header[4]
         data = bytes()
         while len(data) != length:
-            print("READING")
             data += await event_loop.sock_recv(sock, length - len(data))
         print("Received data:")
         print(data.hex())

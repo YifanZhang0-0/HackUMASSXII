@@ -317,24 +317,20 @@ export function decode(arr, s) {
 function _decode(arr, s) {
     // get header
     const header = arr[s++]
-    console.info("HEADER TYPE: ");
     switch(header) {
         case Magic.INT:
-            console.info('int');
             let int = 0
             for (let i=0; i<8; i++) {
                 int |= arr[s + i] << ((7 - i) * 8)
             }
             return [int, 9]
         case Magic.FLOAT:
-            console.info('float');
             let float = new Uint8Array(8)
             for (let i=0; i<8; i++) {
                 float[i] = arr[s+i]
             }
             return [new DataView(float.buffer).getFloat64(0), 9]
         case Magic.STRING:
-            console.info('str');
             let slen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
             // let string = ""
             const string = String.fromCharCode(arr.slice(s, s + slen))
@@ -343,7 +339,6 @@ function _decode(arr, s) {
             // }
             return [string, 5+slen]
         case Magic.ARRAY:
-            console.info('arr');
             let alen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
             let array = []
             for (let i=0; i<alen; i++) {
@@ -351,7 +346,6 @@ function _decode(arr, s) {
                 s += size
                 array.push(val)
             }
-            console.log("ARRAY", array)
             return [array, 5+s]
         case Magic.OBJECT:
             console.info('obj');
@@ -418,7 +412,6 @@ function encode_function(res, func) {
 }
 
 export function decode_function(data, length) {
-    console.log(data)
     let s=0
     let id = (data[s++] << 8) + data[s++]
     let retid = (data[s++] << 8) + data[s++]
@@ -430,10 +423,6 @@ export function decode_function(data, length) {
         params.push(val)
     }
 
-    console.log(id)
-    console.log(retid)
-    console.log(params)
-    console.log(length)
     return [id, retid, params]
 }
 
@@ -443,21 +432,15 @@ export function encode_return(retid, value, type) {
     let res = [0xB0, 0, 0, 0, 0]
     res.push((retid & 0xFF00) >> 8)
     res.push(retid & 0xFF)
-    console.log(retid)
-    console.log(value)
-    console.log(type)
 
-    console.log("A")
     const arr = encodeEachParam(new Uint8Array(), value, type)
     arr.forEach(a => res.push(a));
 
-    console.log("B")
     let len = res.length - 5
     res[1] = (len & 0xFF000000) >> 24
     res[2] = (len & 0xFF0000) >> 16
     res[3] = (len & 0xFF00) >> 8
     res[4] = (len & 0xFF)
-    console.log("C")
 
     return new Uint8Array(res)
 }

@@ -147,6 +147,7 @@ body, html {
   color: White;
   align-self: flex-start; /* Aligns label to the left */
   padding-left: 9%; /* Adds space to keep label aligned with textarea */
+  width: max-content;
 }
 
 .input-label-console {
@@ -209,10 +210,10 @@ body, html {
 
 /* Styling for the console text area */
 .console-area {
-  width: 100%; /* Wider than the input text areas */
-  height: 300px; /* Taller than the input text areas */
+  width: -webkit-fill-available;
+  height: 300px;
   padding: 10px;
-  margin-left: 147px;
+  margin: 0px 47px;
   font-size: 1rem;
   border: 1px solid #ccc;
   border-radius: 4px;

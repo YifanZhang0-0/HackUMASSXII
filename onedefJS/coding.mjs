@@ -332,11 +332,11 @@ function _decode(arr, s) {
             return [new DataView(float.buffer).getFloat64(0), 9]
         case Magic.STRING:
             let slen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
-            // let string = ""
-            const string = String.fromCharCode(arr.slice(s, s + slen))
-            // for (let i=s; i<slen+s; i++) {
-            //     string += String.fromCharCode(arr[i])
-            // }
+            let string = ""
+            // const string = String.fromCharCode(arr.slice(s, s + slen))
+            for (let i=s; i<slen+s; i++) {
+                string += String.fromCharCode(arr[i])
+            }
             return [string, 5+slen]
         case Magic.ARRAY:
             let alen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]

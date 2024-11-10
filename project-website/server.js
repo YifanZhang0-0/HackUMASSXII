@@ -7,9 +7,9 @@ stuff = {};
 (async () => {
 onedef = await import("../onedefJS/client/load.mjs")
 stuff["test.py"]=await onedef.loadPY("test.py")
-console.log(stuff["test.py"])
-// stuff["llm.py"]=await onedef.loadPY("llm.py")
-// console.log(stuff["llm.py"])
+console.log("test loaded")
+stuff["llm.py"]=await onedef.loadPY("llm.py")
+console.log("llm loaded")
 })();
 
 
@@ -28,15 +28,21 @@ app.get('/', (req, res) => {
 
 app.post("/runlocal", async function (req, res) {
 
-  console.log("running js")
+  console.log("running js", req.body.file, req.body.js)
   let output = []
   let obj=stuff[req.body.file]
+  console.log(obj)
   let _log = console.log
   console.log = (...a) => {
     _log(a)
     output.push(a.join(" "));
   }
-  eval(`(async () => {${req.body.js}; console.log=_log; res.json({ text: output.join(" ") })})();`);
+  try {
+    eval(`(async () => {${req.body.js}; console.log=_log; res.json({ text: output.join("\\n") })})();`);
+  }
+  catch (e) {
+    res.json({ text: e.toString() })
+  }
 })
 
 

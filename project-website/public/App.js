@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // const inputSection = document.querySelector('.input-section');
 
   const javascript = document.getElementById("javascript")
+  const output = document.getElementById("output")
+  const dropdown = document.getElementById("dropdown1")
   
   let currentImage = 1;
 
@@ -31,10 +33,10 @@ document.addEventListener('DOMContentLoaded', function() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        file: "test.py",
+        file: dropdown.value,
         js: javascript.value
       })
-    }).then(console.log).then(a => a.json()).then(console.log)
+    }).then(a => a.json()).then(({ text }) => output.value = text)
   });
 
   // Show initial image

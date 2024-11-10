@@ -4,6 +4,7 @@ import { exec } from "child_process"
 import { Function, PY } from "../classes.mjs"
 import { strict as assert } from "assert"
 import { decode } from "../coding.mjs"
+import { Magic } from "../magic.mjs"
 
 export async function setup_socket(library, socket_name) {
   const function_def_finished = new Promise((res, _) => {
@@ -14,12 +15,11 @@ export async function setup_socket(library, socket_name) {
       socket.on("readable", () => {
         // first we have to get the functions
         if (library.functions === undefined) {
-
           const read = socket.read(5)
           if (read == null) return
           const head = new Uint8Array(read)
 
-          assert(head[0] == 0xF2)
+          assert.equal(head[0], Magic.FDEF)
           const length = (head[1] << 24) + (head[2] << 16) + (head[3] << 8) + head[4]
           const data = new Uint8Array(socket.read(length))
 
@@ -28,12 +28,11 @@ export async function setup_socket(library, socket_name) {
         }
 
         // otherwise it's a return
-        // TODO: assert head is 0xF1
         const read = socket.read(5)
-        if (read == null) return
+        if (read === null) return
         const head = new Uint8Array(read)
-        assert(head[0] == 0xB0)
-        const length = (head[1] << 24) + (head[2] << 16) + (head[3] << 8) + head[4]
+        assert.equal(head[0], Magic.RET)
+        const length = head[1] << 24 | head[2] << 16 | head[3] << 8 | head[4]
         const data = new Uint8Array(socket.read(length))
         process_return(library, data, length)
       })
@@ -51,7 +50,7 @@ export async function setup_socket(library, socket_name) {
 function run_server(type, file, socket_name) {
   switch (type) {
     case PY:
-      exec(`python ${file} socket=${socket_name} > out 2>&1`)
+      exec(`python ${file} socket=${socket_name}`, err => { throw err })
       break;
     default:
       throw new Error("bad language")
@@ -90,17 +89,19 @@ function get_function(list, data, s) {
 function process_return(library, data) {
   let s=0
   const retid = (data[s++] << 8) + data[s++]
-  const value = decode(data, s)
-  console.log("VALUE", value)
+  console.log("RECIEVED ENCODED DATA: ", data)
+  const value = decode(data, 2)
+  console.log("RET VALUE", value)
 
-  let idx = -1
+  let idx;
   library.waitlist.forEach((a, i) => {
     if (a[0] != retid) return
     idx = i
     a[1](value)
   })
 
-  if (idx == -1) throw new Error(`return id ${retid} not found in waitlist`)
+  if (idx === undefined)
+    throw new Error(`return id ${retid} not found in waitlist`);
   library.waitlist.splice(idx, 1)
 }
 

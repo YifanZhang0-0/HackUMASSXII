@@ -9,6 +9,7 @@ export const Magic = {
   OBJECT: 0xA5,
   VOID: 0xA6,
   ERR: 0xA7,
+  RET: 0xB0
 }
 
 export const INT = Magic.INT

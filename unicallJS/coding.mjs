@@ -320,31 +320,35 @@ export function decode(arr, s) {
 }
 
 function _decode(arr, s) {
-    console.log(arr, s)
     // get header
     const header = arr[s++]
-    console.log("h",header)
+    process.stdout.write("HEADER TYPE: ");
     switch(header) {
         case Magic.INT:
+            console.log('int');
             let int = 0
             for (let i=0; i<8; i++) {
-                int += (arr[s+i] << 8*(7-i))
+                int |= arr[s + i] << ((7 - i) * 8)
             }
             return [int, 9]
         case Magic.FLOAT:
+            console.log('float');
             let float = new Uint8Array(8)
             for (let i=0; i<8; i++) {
                 float[i] = arr[s+i]
             }
             return [Float64Array.from(float)[0], 9]
         case Magic.STRING:
+            console.log('str');
             let slen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
-            let string = ""
-            for (let i=s; i<slen+s; i++) {
-                string += String.fromCharCode(arr[i])
-            }
+            // let string = ""
+            const string = String.fromCharCode(arr.slice(s, s + slen))
+            // for (let i=s; i<slen+s; i++) {
+            //     string += String.fromCharCode(arr[i])
+            // }
             return [string, 5+slen]
         case Magic.ARRAY:
+            console.log('arr');
             let alen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
             let array = []
             for (let i=0; i<alen; i++) {
@@ -354,6 +358,7 @@ function _decode(arr, s) {
             }
             return array
         case Magic.OBJECT:
+            console.log('obj');
             let olen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
             let strings = []
             let object = {}
@@ -369,8 +374,10 @@ function _decode(arr, s) {
             }
             return object
         case Magic.VOID:
+            console.log('void');
             return undefined
         case Magic.ERR:
+            console.log('err');
             throw new Error("runtime error")
         default:
             throw new Error(`invalid header for return packet ${header}`)

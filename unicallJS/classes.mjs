@@ -56,7 +56,7 @@ export class Library {
       this.waitlist.push([retid, res])
     })
     // send the byte array off
-    console.log("sending", bytes)
+    console.log("CALLING WITH", bytes)
     this.socket.write(bytes)
     // wait to get sent notified for the correct thing
     return await wait

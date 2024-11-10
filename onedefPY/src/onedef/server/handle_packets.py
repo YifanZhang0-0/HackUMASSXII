@@ -2,10 +2,10 @@ import asyncio
 import socket
 import sys
 from typing import Callable
-from unicall import classes
-from unicall import coding
-from unicall.server import interface
-from unicall.server import writeback
+from onedef import classes
+from onedef import coding
+from onedef.server import interface
+from onedef.server import writeback
 import threading
 
 

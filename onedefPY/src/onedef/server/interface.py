@@ -1,15 +1,16 @@
 from typing import Callable
-from unicall.classes import *
+from onedef.classes import *
 
 interface: list[tuple[FunctionMeta, Callable]] = []
 # TODO we use magic global in here, please fix max
 def typed(*args, **returns):
     def meta(library_function):
-        def switch(str):
-            if (str == int): return TypeMeta.INT
-            if (str == float): return TypeMeta.FLOAT
-            if (str == list): return TypeMeta.ARRAY
-            if (str == dict): return TypeMeta.OBJECT
+        def switch(s):
+            if (s == int): return TypeMeta.INT
+            if (s == float): return TypeMeta.FLOAT
+            if (s == str): return TypeMeta.STRING
+            if (s == list): return TypeMeta.ARRAY
+            if (s == dict): return TypeMeta.OBJECT
             raise TypeError(f'Unvalid type annotation of: {str}')
   
         arg = list(map(switch, args))

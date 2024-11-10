@@ -1,5 +1,5 @@
 import struct
-from unicall.classes import ReturnData, ErrorValue
+from onedef.classes import ReturnData, ErrorValue
 
 def encode_function_call(functions, functionID, returnID, *args):
     """

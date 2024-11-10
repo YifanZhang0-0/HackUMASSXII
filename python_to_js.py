@@ -1,5 +1,5 @@
-from unicall import client
-from unicall import library
+from onedef import client
+from onedef import library
 import asyncio
 
 async def main():

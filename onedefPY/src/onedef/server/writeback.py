@@ -1,5 +1,5 @@
-from unicall import classes
-from unicall.server import interface
+from onedef import classes
+from onedef.server import interface
 import socket
 # import file_list
 

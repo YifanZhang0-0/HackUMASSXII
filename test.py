@@ -1,4 +1,4 @@
-from unicall.server import typed, serve
+from onedef.server import typed, serve
 
 print("running python")
 

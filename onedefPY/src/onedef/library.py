@@ -1,7 +1,7 @@
 import asyncio
 import socket
-from unicall import classes
-from unicall import coding
+from onedef import classes
+from onedef import coding
 class Library:
     def __init__(self, filename):
         self.filename = filename

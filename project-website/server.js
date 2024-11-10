@@ -2,15 +2,15 @@ const express = require('express');
 const path = require('path');
 
 
-const lib = require("../unicallJS/client/load")
-const stuff = {
-  "test.py": lib.loadPY("test.py")
-}
+// const lib = require("../unicallJS/client/load")
+// const stuff = {
+  // "test.py": lib.loadPY("test.py")
+// }
 
 
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));

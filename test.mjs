@@ -1,4 +1,4 @@
-import { loadPY } from "./unicallJS/client/load.mjs"
+import { loadPY } from "./onedefJS/client/load.mjs"
 const obj = await loadPY("test.py")
 console.info = () => {}; // silence errors
 

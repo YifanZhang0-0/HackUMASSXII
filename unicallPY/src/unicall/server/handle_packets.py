@@ -25,7 +25,6 @@ async def handle_packet(
         return_id: The id to return to.
         function_id: The function to run.
     """
-    print(socket, return_id, function_id, args)
     _metadata, func = interface.interface[function_id]
     return_value = None
     if (asyncio.iscoroutinefunction(func)):
@@ -33,12 +32,10 @@ async def handle_packet(
     else:
         return_value = func(*args)
 
-    print("HAIHDWIHWD2")
     socket.send(coding.encode_return_data(classes.ReturnData(
         value=return_value,
         destination=return_id,
     )))
-    print("sent to socket")
     
 def serve():
     """Serves the RPC server on the socket in sys.argv[1].
@@ -48,7 +45,6 @@ def serve():
         raise "Bad"
     socket_to_client.connect(sys.argv[1][7:])
     writeback.write_back(socket_to_client=socket_to_client)
-    print("HII")
 
     def inner(socket_to_client):
         while True:
@@ -63,6 +59,5 @@ def serve():
             function_id, return_id, arguments = coding.decode_function_request(data)
 
             asyncio.run(handle_packet(socket_to_client, return_id, function_id, *arguments))
-            print("hi7")
 
     threading.Thread(target=inner, args=(socket_to_client,)).start()

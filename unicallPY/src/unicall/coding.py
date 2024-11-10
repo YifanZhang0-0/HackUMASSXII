@@ -48,11 +48,11 @@ def encode_function_call(functions, functionID, returnID, *args):
             string_bytes = arg.encode('utf-8')
             if len(string_bytes) > 65535:
                 raise ValueError("String too long to encode with 16-bit length")
-            encoded_args.extend(b'\xA3' + len(string_bytes).to_bytes(2, byteorder='big') + string_bytes)
+            encoded_args.extend(b'\xA3' + len(string_bytes).to_bytes(4, byteorder='big') + string_bytes)
         elif isinstance(arg, list) and expected_type == 0xA4:
             # Encode list
             element_data = b''.join(encoding(elem) for elem in arg)
-            encoded_args.extend(b'\xA4' + len(arg).to_bytes(2, byteorder='big') + element_data)
+            encoded_args.extend(b'\xA4' + len(arg).to_bytes(4, byteorder='big') + element_data)
         elif arg is None and expected_type == 0xA6:
             # Encode None
             encoded_args.extend(b'\xA6')
@@ -111,7 +111,7 @@ def encoding(*args):
             length = len(string_bytes)
             if length > 65535:
                 raise ValueError("String too long to encode with 16-bit length")
-            arg_bytes = length.to_bytes(2, byteorder='big') + string_bytes
+            arg_bytes = length.to_bytes(4, byteorder='big') + string_bytes
         elif isinstance(arg, list):
             # List encoding
             header = b'\xA4'
@@ -119,7 +119,7 @@ def encoding(*args):
             if length > 65535:
                 raise ValueError("Array too long to encode with 16-bit length")
             element_data = b''.join(encoding(elem) for elem in arg)
-            arg_bytes = length.to_bytes(2, byteorder='big') + element_data
+            arg_bytes = length.to_bytes(4, byteorder='big') + element_data
         elif isinstance(arg, dict):
             # Dictionary encoding
             header = b'\xA5'
@@ -133,7 +133,7 @@ def encoding(*args):
                 key_data = encoding(key)  # Encode the key (string)
                 value_data = encoding(value)  # Encode the value (any supported type)
                 kv_data += key_data + value_data
-            arg_bytes = size.to_bytes(2, byteorder='big') + kv_data
+            arg_bytes = size.to_bytes(4, byteorder='big') + kv_data
         elif arg is None:
             # None encoding
             header = b'\xA6'

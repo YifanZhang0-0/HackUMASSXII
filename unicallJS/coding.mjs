@@ -87,7 +87,7 @@ export function encodeEachParam(byte_array, obj_run_param, func_param_type, chec
             if (checkType && !(typeof obj_run_param === 'number')) {
                 throw new Error("Parameter Float Type Mismatch.")
             }
-            data = floatConvHelper(Math.floor(obj_run_param))
+            data = floatConvHelper(obj_run_param)
             // byte_array = updateByteArrray(byte_array, [Magic.FLOAT])
             byte_array = updateByteArrray(byte_array, data)
             return byte_array;
@@ -175,19 +175,16 @@ export function intConvHelper(num) {
  */
 export function floatConvHelper(num) {
     // convert float into 64 bits (8 bytes)
-    const temp = new Float64Array([num])
-    const buffer = temp.buffer
-    let float_arr = new Uint8Array(9) // header + float itself
-    float_arr[0] = Magic.FLOAT
+    let dv = new DataView(new ArrayBuffer(8))
+    dv.setFloat64(0, num, false)
 
-    for (let i = 0; i < 8; i++) { // use buffer to interface with float binaries
-        float_arr[i + 1] = new Uint8Array(buffer)[i]
+    let res = new Uint8Array(9)
+    for (let i=0; i<8; i++) {
+        res[i+1] = dv.getUint8(i)
     }
-    // for (let i = 0; i < 64; i+=8) {
-    //     // shift to right and mask to keep right most 8 bits
-    //     float_arr[8 - i/8] = Number((temp[0] >> parseFloat(8 * i)) & 0xFFn) 
-    // }
-    return float_arr
+    res[0] = Magic.FLOAT
+    
+    return res
 }
 
 /**
@@ -355,7 +352,7 @@ function _decode(arr, s) {
             for (let i=0; i<8; i++) {
                 float[i] = arr[s+i]
             }
-            return [Float64Array.from(float)[0], 9]
+            return [new DataView(float.buffer).getFloat64(0), 9]
         case Magic.STRING:
             console.info('str');
             let slen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
@@ -374,7 +371,8 @@ function _decode(arr, s) {
                 s += size
                 array.push(val)
             }
-            return array
+            console.log("ARRAY", array)
+            return [array, 5+s]
         case Magic.OBJECT:
             console.info('obj');
             let olen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]

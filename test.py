@@ -6,4 +6,9 @@ print("running python")
 def addfive(a):
     return a+5
 
+
+@typed('float', 'array', returns='array')
+def addtoarray(a, b):
+    return [a+i for i in b]
+
 serve()

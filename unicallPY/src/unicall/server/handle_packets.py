@@ -6,6 +6,7 @@ from unicall import classes
 from unicall import coding
 from unicall.server import interface
 from unicall.server import writeback
+import threading
 
 # TODO: update this to the ReturnData type
 pending_returns = list[any]
@@ -32,11 +33,12 @@ async def handle_packet(
     else:
         return_value = func(*args)
 
-    print("HAIHDWIHWD")
+    print("HAIHDWIHWD2")
     socket.send(coding.encode_return_data(classes.ReturnData(
         value=return_value,
         destination=return_id,
     )))
+    print("sent to socket")
     
 def serve():
     """Serves the RPC server on the socket in sys.argv[1].
@@ -48,34 +50,19 @@ def serve():
     writeback.write_back(socket_to_client=socket_to_client)
     print("HII")
 
-
-    async def inner():
+    def inner(socket_to_client):
         while True:
             data = bytes()
             data += socket_to_client.recv(5)
             if data == b'':
-                # we must die
                 break
-            
-            print(data)
+
             remaining_length = int.from_bytes(data[1:5], 'big')
             data += socket_to_client.recv(remaining_length)
-            print(data)
-        
+                
             function_id, return_id, arguments = coding.decode_function_request(data)
-            print("hi6")
 
-            await handle_packet(
-                socket_to_client,
-                return_id,
-                function_id,
-                *arguments,
-            );
-            # asyncio.create_task(handle_packet(
-                # socket_to_client,
-                # return_id,
-                # function_id,
-                # *arguments,
-            # ))
+            asyncio.run(handle_packet(socket_to_client, return_id, function_id, *arguments))
             print("hi7")
-    asyncio.run(inner())
+
+    threading.Thread(target=inner, args=(socket_to_client,)).start()

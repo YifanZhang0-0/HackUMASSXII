@@ -301,12 +301,14 @@ export function recurArrHelper(byte_array, obj_run_param, first_call=true, obj_r
  * @returns {Uint8Array} Binary representation with newly encoded object.
  */
 export function objConvHelper(byte_array, keys, values) {
-    let temp_keys_arr;
-    for (const key of keys) {
-        temp_keys_arr = strConvHelper(key)
+    let temp_key_arr = []
+    let temp_all_keys_arr = []
+    for (const key of keys) { // encode each key into the byte array first
+        temp_key_arr = strConvHelper(key)
+        temp_all_keys_arr = updateByteArrray(temp_all_keys_arr, temp_key_arr)
     }
-    // encoding values, we created an array for it
-    byte_array = updateByteArrray(byte_array, temp_keys_arr)
+    // encoding values for key into the byte array, which is in the form of an array
+    byte_array = updateByteArrray(byte_array, temp_all_keys_arr)
     byte_array = recurArrHelper(byte_array, values, true, true)
     return byte_array
 }

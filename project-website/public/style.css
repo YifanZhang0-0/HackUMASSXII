@@ -22,6 +22,8 @@ body, html {
 
 .welcome {
   background: black;
+  z-index:-2;
+  position:relative;
 }
 
 .title {

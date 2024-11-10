@@ -152,3 +152,28 @@ body, html {
   border-color: #333;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
+
+.input-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.input-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two equal-width columns */
+  gap: 20px;
+  width: 100%;
+  max-width: 100%; /* Optional: limits the width of the container */
+}
+
+.button-container {
+  margin-top: 10px; /* Adjusts space between text areas and button */
+  text-align: center;
+}
+
+.Execute {
+  padding: 10px 20px;
+  font-size: 1rem;
+}

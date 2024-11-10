@@ -1,5 +1,6 @@
 import * as coding from '../coding.mjs';
 import assert from 'assert';
+import { Magic } from '../magic.mjs';
 
 // decode does not seem to decode yet
 
@@ -30,8 +31,19 @@ import assert from 'assert';
 // let test_arr_array = coding.recurArrHelper(byte_array, arr)
 // console.log(test_arr_array)
 
-let arr = [[3]]
-let dummy = [69]
-let byte_array = new Uint8Array(dummy)
-let test_arr_array = coding.recurArrHelper(byte_array, arr)
-console.log(test_arr_array)
+const dog = new Object()
+// dog.name = 'cat'
+dog.age = 69
+// dog.owner = 'horse'
+// dog.friend = 'fish'
+let keys = []
+let values = []
+
+for (const pair of Object.entries(dog)) {
+    keys.push(pair[0])
+    values.push(pair[1])
+}
+
+let test_obj_array = new Uint8Array()
+test_obj_array = coding.encodeEachParam(test_obj_array, dog, Magic.OBJECT, false)
+console.log(test_obj_array)

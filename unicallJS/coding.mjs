@@ -71,7 +71,7 @@ export function encoding(func, retid, ...params) {
  * @param {array} params - Params from obj.run, what we want to pass into python.
  * @param {array} param_types - Actual function parameter types specified by python.
  */
-function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=true) {
+export function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=true) {
     // we check type by default, toggle off for Object encoding
     let data;
     switch (func_param_type) {
@@ -115,18 +115,33 @@ function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=t
             return byte_array;
         case Magic.OBJECT:
             // encoding object header
-            let obj_len = obj_run_param.length
-            let temp_obj_arr = new Uint8Array(5)
-            temp_obj_arr[0] = Magic.OBJECT
-            const temp_obj_len = new Uint32Array([obj_len])
-            for (let i = 0; i < 32; i += 4) {
-                temp_obj_arr[i/4 + 1] = Number(temp_obj_len[0] >> (8 * 1) & 0xFF)
+            // let obj_len = obj_run_param.length
+            // let temp_obj_arr = new Uint8Array(5)
+            // temp_obj_arr[0] = Magic.OBJECT
+            // const temp_obj_len = new Uint32Array([obj_len])
+            // for (let i = 0; i < 32; i += 4) {
+            //     temp_obj_arr[i/4 + 1] = Number(temp_obj_len[0] >> (8 * 1) & 0xFF)
+            // }
+            const temp = new Uint32Array([Object.keys(obj_run_param).length]) //string length -> 4 bytes
+            const buffer = temp.buffer
+            
+            let obj_head_len = new Uint8Array(5) // obj header + obj len
+            obj_head_len[0] = Magic.OBJECT
+            for (let i = 0; i < 32; i +=4) {
+                obj_head_len[5 - (i / 8 + 1)] = new Uint8Array(buffer)[i]
             }
+            byte_array = updateByteArrray(byte_array, obj_head_len)
+            
             // encode each of the attributes within object
             // get obj key & values
-            let key_and_val = []
-            key_and_val = Object.entries(obj_run_param)
-            byte_array = objConvHelper(byte_array, key_and_val[0], key_and_val[1])
+            let keys = []
+            let values = [] 
+            for (const pair of Object.entries(obj_run_param)) {
+                keys.push(pair[0])
+                values.push(pair[1])
+            }
+            
+            byte_array = objConvHelper(byte_array, keys, values)
             return byte_array;
         case Magic.VOID:
             byte_array = updateByteArrray(byte_array, [Magic.VOID])
@@ -255,7 +270,6 @@ export function recurArrHelper(byte_array, obj_run_param, first_call=true, obj_r
     } else { // must not be array
         // individual elements
         // no type checking
-        console.log("hi")
         if (isInt(n)) {
             byte_array = encodeEachParam(byte_array, n, Magic.INT, false)
             return recurArrHelper(byte_array, obj_run_param.slice(1), false)
@@ -287,11 +301,13 @@ export function recurArrHelper(byte_array, obj_run_param, first_call=true, obj_r
  * @returns {Uint8Array} Binary representation with newly encoded object.
  */
 export function objConvHelper(byte_array, keys, values) {
-    byte_array = updateByteArrray(byte_array, keys)
-    // encoding values
-    for (let val of values) { // 'of' gets actual val as opposed to index 
-        byte_array = recurArrHelper(byte_array, val, _, true)
+    let temp_keys_arr;
+    for (const key of keys) {
+        temp_keys_arr = strConvHelper(key)
     }
+    // encoding values, we created an array for it
+    byte_array = updateByteArrray(byte_array, temp_keys_arr)
+    byte_array = recurArrHelper(byte_array, values, true, true)
     return byte_array
 }
 

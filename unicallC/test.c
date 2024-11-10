@@ -1,10 +1,10 @@
 #include "./unicall.h"
 
-MANIFEST_ITEM(int, float, double)
+// MANIFEST_ITEM(int, float, double)
 
-MANIFEST_ITEM(int, int, float, bool)
+// MANIFEST_ITEM(int, int, float, bool)
 
-APPEND_TO_MANIFEST(int, float, double)
+APPEND_TO_MANIFEST(example_function, float, int, float, double)
 
 // FOR_EACH(
 //   F,

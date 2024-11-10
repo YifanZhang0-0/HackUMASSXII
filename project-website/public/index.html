@@ -21,25 +21,21 @@
     <!-- Input Section -->
     <section id="inputSection" class="section input-section">
         <div class="input-container">
-            <div class="input-group">
-              <label for="language1" class="input-label" style="display: inline-block; align-items: right;">Python</label>
-              <!-- <div style="display: flex; align-items: center;">
-                <div style="flex-grow: 1;">
-                  <label for="language1" class="input-label">Python</label>
-                </div>
-                <select name="dog-names" id="dog-names">
-                  <option value="rigatoni">Rigatoni</option>
-                  <option value="dave">Dave</option>
-                  <option value="pumpernickel">Pumpernickel</option>
-                  <option value="reeses">Reeses</option>
-                </select>
-              </div>               -->
-              <textarea id="language1" placeholder="Enter code here..." class="text-area"></textarea>
+
+            
+            <div class="label-dropdown-container">
+              <span class="input-label">Python</span>
+              <select id="dropdown1" class="dropdown-menu">
+                <option value="option1">Option 1</option>
+                <option value="option2">Option 2</option>
+                <option value="option3">Option 3</option>
+              </select>
             </div>
-            <div class="input-group">
-                <label for="language2" class="input-label">JavaScript</label>
-                <textarea id="language2" placeholder="Enter code here..." class="text-area"></textarea>
-            </div>
+            <div class="input-label">JavaScript</div>
+
+            <textarea id="language1" placeholder="Enter code here..." class="text-area"></textarea>
+            <textarea id="language2" placeholder="Enter code here..." class="text-area"></textarea>
+          
             <!-- Console textbox -->
             <div class="console-group">
                 <label for="consoleOutput" class="input-label-console">Console Output</label>

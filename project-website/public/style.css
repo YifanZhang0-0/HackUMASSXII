@@ -135,7 +135,7 @@ body, html {
 .input-group {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   width: 100%; /* Each input group takes full width of the grid column */
 }
 
@@ -143,6 +143,7 @@ body, html {
 .input-label {
   font-size: 1rem;
   margin-bottom: 5px;
+  margin-top: 47px;
   color: White;
   align-self: flex-start; /* Aligns label to the left */
   padding-left: 9%; /* Adds space to keep label aligned with textarea */
@@ -322,7 +323,7 @@ body, html {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Optional shadow for depth */
 }
 
-/*Dropdown CSS*/
+/* Dropdown CSS
 .dropdown {
   display: inline-block;
   position: relative;
@@ -346,4 +347,40 @@ body, html {
 .dropdown-content a:hover {
   color: #FFFFFF;
   background-color: #00A4BD;
+} */
+
+/* Container for label and dropdown */
+.label-dropdown-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%; /* Use full width or adjust as needed */
+  margin-bottom: 1px; /* Remove auto margins to prevent centering */
+}
+
+
+/* Adjusted label styling */
+.input-label {
+  font-size: 1rem;
+  color: white;
+  margin-right: -45px; /* Adjust spacing between label and dropdown */
+}
+
+
+/* Dropdown menu styling */
+.dropdown-menu {
+  background-color: #333;
+  color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 500px;
+  margin-bottom: -30px;
+}
+
+/* Dropdown menu hover effect */
+.dropdown-menu:hover {
+  background-color: #555;
 }

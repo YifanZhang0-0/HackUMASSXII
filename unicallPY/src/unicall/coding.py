@@ -214,7 +214,7 @@ def decode_value(data: bytes) -> tuple[any, int] | None:
 
     if flag == 0xA1: # INT
         if len(data) < 9: return None
-        return (int.from_bytes(data[1:9]), 9)
+        return (int.from_bytes(data[1:9], "big"), 9)
 
     elif flag == 0xA2: # FLOAT
         if len(data) < 9: return None
@@ -222,14 +222,14 @@ def decode_value(data: bytes) -> tuple[any, int] | None:
 
     elif flag == 0xA3: # STRING
         if len(data) < 5: return None
-        string_length = int.from_bytes(data[1:5])
+        string_length = int.from_bytes(data[1:5], "big")
 
         if len(data) < 5 + string_length: return None
         return (data[5:].decode(), string_length + 5)
 
     elif flag == 0xA4: # ARRAY
         if len(data) < 5: return None
-        array_size = int.from_bytes(data[1:5])
+        array_size = int.from_bytes(data[1:5], "big")
         remaining_data = data[5:]
         key_array = []
         while len(key_array) < array_size:

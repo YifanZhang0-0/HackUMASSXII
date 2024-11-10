@@ -420,3 +420,9 @@ body, html {
   color: #ff9900; /* Changes color on hover */
   cursor: pointer; /* Changes the cursor to indicate interactivity */
 }
+
+
+textarea {
+    background-color: black !important;
+    color: white !important;
+}

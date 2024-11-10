@@ -6,6 +6,7 @@ stuff = {};
 
 (async () => {
 onedef = await import("../onedefJS/client/load.mjs")
+console.log("doing stuff")
 stuff["test.py"]=await onedef.loadPY("test.py")
 console.log("test loaded")
 stuff["llm.py"]=await onedef.loadPY("llm.py")
@@ -26,7 +27,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+let busy = false
 app.post("/runlocal", async function (req, res) {
+
+  if (busy) return res.send({ text: "backend is busy!!" })
+  busy = true
 
   console.log("running js", req.body.file, req.body.js)
   let output = []
@@ -38,11 +43,12 @@ app.post("/runlocal", async function (req, res) {
     output.push(a.join(" "));
   }
   try {
-    eval(`(async()=>{try{${req.body.js};console.log=_log;res.json({text: output.join("\\n")})}catch(e){console.log=_log;res.json({text:e.toString()})}})();`);
+    eval(`(async()=>{try{${req.body.js};console.log=_log;busy=false;res.json({text: output.join("\\n")})}catch(e){console.log=_log;busy=false;res.json({text:e.toString()})}})();`);
   }
   catch (e) {
+    busy = false
     res.json({ text: e.toString() })
-  }
+    }
 })
 
 

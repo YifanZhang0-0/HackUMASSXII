@@ -35,7 +35,6 @@
               <select id="dropdown1" class="dropdown-menu">
                 <option value="test.py">test.py</option>
                 <option value="llm.py">llm.py</option>
-                <option value="option3">Option 3</option>
               </select>
             </div>
             <div class="input-label">JavaScript</div>
@@ -54,6 +53,7 @@
           const dropdown = document.getElementById('dropdown1');
           const language1 = document.getElementById('language1');
         const language2 = document.getElementById("javascript");
+        const base = document.getElementById("base");
       
           const test = 'from unicall.server import typed, serve\n\nprint("running python")\n\n@typed(int, returns=int)\ndef addfive(a):\n\treturn a+5\n\n\n@typed(float, list, returns=list)\ndef addtoarray(a, b):\n\treturn [a+i for i in b]\n\nserve()';
           const llm = 'from transformers import AutoTokenizer, AutoModelForCausalLM\nimport torch\nfrom unicall.server import typed, serve\n\n# loading model, wrapper is created and run once\ncheckpoint = "HuggingFaceTB/SmolLM2-1.7B-Instruct"\ndevice = \'mps\' if torch.backends.mps.is_available() else \'cpu\'\n\ntokenizer = AutoTokenizer.from_pretrained(checkpoint)\nmodel = AutoModelForCausalLM.from_pretrained(checkpoint).to(device)\n\n@typed(str, returns=str)\ndef ask_model(question):\n\tmessages = [{"role": "user", "content": f"{question}? Answer concisely in 1 to 2 sentences."}]\n\tinput_text = tokenizer.apply_chat_template(messages, tokenize=False)\n\tinputs = tokenizer.encode(input_text, return_tensors="pt").to(device)\n\n\toutputs = model.generate(inputs, pad_token_id=tokenizer.pad_token_id, max_new_tokens=50, temperature=0.2, top_p=0.9, do_sample=True)\n\n\tmodel_answer = tokenizer.decode(outputs[0])\n\treturn model_answer.split("assistant")[-1].split(\'<\')[0]\n\nserve()';
@@ -74,10 +74,7 @@
                 //llm.py
                 language1.value = llm
                 language2.value = llmdefault
-              } else if (dropdown.value === 'option3') {
-                  language1.value = 'suck';
-              }
-          });
+          }});
         </script>
         <!-- 'Run' button -->
         <div style="text-align: center; margin-top: 10px;">

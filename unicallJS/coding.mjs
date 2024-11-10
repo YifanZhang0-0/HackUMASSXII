@@ -16,8 +16,6 @@ function updateByteArrray(byte_array, data) {
 }
 
 function initFunCall(byte_array, id, ret) {
-    //TODO 
-    let place_holder = 0 // don't know byte_array length until end
     // split func id & ret id into two bytes
     let temp = new Uint16Array([id, ret])
     let id0 = (temp[0] & 0xFF00) >> 8 // first 8 bits
@@ -80,7 +78,6 @@ export function encodeEachParam(byte_array, obj_run_param, func_param_type, chec
                 throw new Error("Parameter Int Type Mismatch.")
             }
             data = intConvHelper(Math.floor(obj_run_param))
-            // byte_array = updateByteArrray(byte_array, [Magic.INT])
             byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.FLOAT:
@@ -88,7 +85,6 @@ export function encodeEachParam(byte_array, obj_run_param, func_param_type, chec
                 throw new Error("Parameter Float Type Mismatch.")
             }
             data = floatConvHelper(obj_run_param)
-            // byte_array = updateByteArrray(byte_array, [Magic.FLOAT])
             byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.STRING:
@@ -96,33 +92,16 @@ export function encodeEachParam(byte_array, obj_run_param, func_param_type, chec
                 throw new Error("Parameter String Type Mismatch.")
             }
             data = strConvHelper(obj_run_param)
-            // byte_array = updateByteArrray(byte_array, [Magic.STRING])
             byte_array = updateByteArrray(byte_array, data)
             return byte_array;
         case Magic.ARRAY:
             // encoding array header done in helper
-
-            // let arr_len = obj_run_param.length
-            // let temp_arr = new Uint8Array(5)
-            // temp_arr[0] = Magic.ARRAY
-            // const temp_len_num = new Uint32Array([arr_len])
-            // for (let i = 0; i < 32; i +=4 ) { // encoding array length
-            //     temp_arr[i/4 + 1] = Number(temp_len_num[0] >> (8 * 1) & 0xFF)
-            // }
-
             // encoding array content
             byte_array = recurArrHelper(byte_array, obj_run_param, Magic.ARRAY)
             return byte_array;
         case Magic.OBJECT:
-            // encoding object header
-            // let obj_len = obj_run_param.length
-            // let temp_obj_arr = new Uint8Array(5)
-            // temp_obj_arr[0] = Magic.OBJECT
-            // const temp_obj_len = new Uint32Array([obj_len])
-            // for (let i = 0; i < 32; i += 4) {
-            //     temp_obj_arr[i/4 + 1] = Number(temp_obj_len[0] >> (8 * 1) & 0xFF)
-            // }
-            const temp = new Uint32Array([Object.keys(obj_run_param).length]) //string length -> 4 bytes
+            // encoding object headers
+            const temp = new Uint32Array([Object.keys(obj_run_param).length]) //object length -> 4 bytes
             const buffer = temp.buffer
             
             let obj_head_len = new Uint8Array(5) // obj header + obj len
@@ -152,7 +131,7 @@ export function encodeEachParam(byte_array, obj_run_param, func_param_type, chec
 }
 
 /**
- * helper function for int conversion into bytes array. 
+ * Helper function for integer conversion into bytes array. Int/Float interchangeable.
  * @param {number} num - Int from params.
  * @returns {Uint8Array} Binary representation with newly encoded integer.
  */
@@ -169,7 +148,7 @@ export function intConvHelper(num) {
 }
 
 /**
- * helper function for float conversion into bytes array.
+ * Helper function for float conversion into bytes array.
  * @param {number} num - Float from params.
  * @returns {Uint8Array} Binary representation with newly encoded float.
  */
@@ -188,7 +167,7 @@ export function floatConvHelper(num) {
 }
 
 /**
- * helper function for string conversion into bytes array.
+ * Helper function for string conversion into bytes array.
  * @param {string} str - string from params.
  * @returns {array} a byte array encoded with string.
  */
@@ -261,8 +240,6 @@ export function recurArrHelper(byte_array, obj_run_param, first_call=true, obj_r
     // singular element
     let n = obj_run_param[0]
     if (Array.isArray(n)) { // must be array only 
-        //byte_array = updateByteArrray(byte_array, Magic.ARRAY)
-        console.log(n)
         return recurArrHelper(byte_array, n)
     } else { // must not be array
         // individual elements

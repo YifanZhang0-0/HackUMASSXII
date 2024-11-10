@@ -8,6 +8,7 @@ from unicall.server import interface
 from unicall.server import writeback
 import threading
 
+
 # TODO: update this to the ReturnData type
 pending_returns = list[any]
 functions = list[Callable]
@@ -27,10 +28,13 @@ async def handle_packet(
     """
     _metadata, func = interface.interface[function_id]
     return_value = None
-    if (asyncio.iscoroutinefunction(func)):
-        return_value = await func(*args)
-    else:
-        return_value = func(*args)
+    try:
+        if (asyncio.iscoroutinefunction(func)):
+            return_value = await func(*args)
+        else:
+            return_value = func(*args)
+    except Exception as e:
+        return_value = e
 
     socket.send(coding.encode_return_data(classes.ReturnData(
         value=return_value,

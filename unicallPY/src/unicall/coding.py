@@ -138,6 +138,10 @@ def encoding(*args):
             # None encoding
             header = b'\xA6'
             arg_bytes = b''  # No data for None type
+        elif isinstance(arg, Exception): 
+            # function call raises an error
+            header = b'\xA7'
+            arg_bytes = arg.to_bytes(1, byteorder='big')
         elif isinstance(arg, ReturnData):
             # ReturnData encoding
             header = b'\xB0'

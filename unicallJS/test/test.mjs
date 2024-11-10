@@ -20,7 +20,7 @@ function test_float_encoding() {
     assert(test_float_array instanceof Uint8Array)
     assert(test_float_array.length === 9)
     let reconstructed_float = coding.decode(test_float_array, 0)
-    assert(reconstructed_float === 420.420, "Encoding Decoding Float Failure")
+    assert(reconstructed_float === 69.420, "Encoding Decoding Float Failure")
     
 }
 
@@ -35,9 +35,10 @@ function test_str_encoding() {
 function test_arr_encoding() {
     let arr = [4, 5, 'world']
     let dummy = [69]
-    let byte_array = new Uint8Array(dummy)
+    let byte_array = new Uint8Array(dummy) // why not ?
     let test_arr_array = coding.recurArrHelper(byte_array, arr)
     // console.log(test_arr_array)
+    assert(test_arr_array.length === 34)
 }
 
 function test_object_encoding() {

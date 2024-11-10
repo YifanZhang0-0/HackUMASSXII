@@ -99,7 +99,7 @@ def encoding(*args):
         if isinstance(arg, int):
             # Integer encoding (8 bytes)
             header = b'\xA1'
-            arg_bytes = arg.to_bytes(8, byteorder='big')
+            arg_bytes = arg.to_bytes(8, byteorder='big', signed=True)
         elif isinstance(arg, float):
             # Float encoding (8 bytes)
             header = b'\xA2'
@@ -218,7 +218,7 @@ def decode_value(data: bytes) -> tuple[any, int] | None:
 
     if flag == 0xA1: # INT
         if len(data) < 9: return None
-        return (int.from_bytes(data[1:9], "big"), 9)
+        return (int.from_bytes(data[1:9], "big", signed=True), 9)
 
     elif flag == 0xA2: # FLOAT
         if len(data) < 9: return None

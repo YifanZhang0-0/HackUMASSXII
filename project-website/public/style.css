@@ -102,3 +102,53 @@ body, html {
 }
 
   
+/* Styles for the input section */
+.input-section {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Input container with a two-column grid */
+.input-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two equal-width columns */
+  gap: 20px; /* Space between the two columns */
+  width: 100%;
+  max-width: 100%; /* Ensures the container spans full width of the page */
+}
+
+/* Each input group (label and textarea) */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%; /* Each input group takes full width of the grid column */
+}
+
+/* Styling for labels */
+.input-label {
+  font-size: 1rem;
+  margin-bottom: 5px;
+  color: #333;
+  align-self: flex-start; /* Aligns label to the left */
+  padding-left: 10%; /* Adds space to keep label aligned with textarea */
+}
+
+/* Style for textarea */
+.text-area {
+  width: 80%; /* Takes up 80% of the input group width */
+  height: 200px; /* Static height, can adjust as needed */
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+  resize: vertical; /* Allows user to resize vertically */
+  margin: 0 auto; /* Centers the textarea within the grid column */
+}
+
+.text-area:focus {
+  border-color: #333;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}

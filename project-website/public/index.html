@@ -22,6 +22,7 @@
     <section id="inputSection" class="section input-section">
         <div class="input-container">
 
+            
             <div class="label-dropdown-container">
               <span class="input-label">Python</span>
               <select id="dropdown1" class="dropdown-menu">
@@ -29,13 +30,6 @@
                 <option value="option2">Option 2</option>
                 <option value="option3">Option 3</option>
               </select>
-            <div id="python" class="input-group">
-                <label for="language1" class="input-label">Python</label>
-                <textarea id="language1" placeholder="Enter code here..." class="text-area"></textarea>
-            </div>
-            <div id="javascript" class="input-group">
-                <label for="language2" class="input-label">JavaScript</label>
-                <textarea id="language2" placeholder="Enter code here..." class="text-area"></textarea>
             </div>
             <div class="input-label">JavaScript</div>
 
@@ -43,12 +37,28 @@
             <textarea id="language2" placeholder="Enter code here..." class="text-area"></textarea>
           
             <!-- Console textbox -->
-            <div id="console" class="console-group">
+            <div class="console-group">
                 <label for="consoleOutput" class="input-label-console">Console Output</label>
                 <textarea id="consoleOutput" placeholder="Output will be shown here..." class="console-area"></textarea>
             </div>
         </div>
-
+        <script>
+          // Get references to the dropdown and the language1 textarea
+          const dropdown = document.getElementById('dropdown1');
+          const language1 = document.getElementById('language1');
+      
+          // Add an event listener to the dropdown
+          dropdown.addEventListener('change', function() {
+              // Set the value of language1 based on the selected option
+              if (dropdown.value === 'option1') {
+                  language1.value = 'hello';
+              } else if (dropdown.value === 'option2') {
+                  language1.value = 'bye';
+              } else if (dropdown.value === 'option3') {
+                  language1.value = 'haha';
+              }
+          });
+        </script>
         <!-- 'Run' button -->
         <div style="text-align: center; margin-top: 10px;">
             <button class="Execute">Run</button>

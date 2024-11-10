@@ -8,7 +8,7 @@ import assert from 'assert';
  * @param {array} data - The data to be placed into byte_array.
  * @returns {Uint8Array} Updated byte_array.
  */
-function updateByteArrray(byte_array, data) {
+function updateByteArray(byte_array, data) {
     let new_byte_array = new Uint8Array(byte_array.length + data.length);
     new_byte_array.set(byte_array)
     new_byte_array.set(data, byte_array.length)
@@ -24,7 +24,7 @@ function initFunCall(byte_array, id, ret) {
     let ret1 = temp[1] & 0x00FF // last 8 bits
 
     let data = [Magic.FCALL, 0, 0, 0, 0, id0, id1, ret0, ret1]
-    return updateByteArrray(byte_array, data)
+    return updateByteArray(byte_array, data)
 }
 
 /**
@@ -78,21 +78,24 @@ export function encodeEachParam(byte_array, obj_run_param, func_param_type, chec
                 throw new Error("Parameter Int Type Mismatch.")
             }
             data = intConvHelper(Math.floor(obj_run_param))
-            byte_array = updateByteArrray(byte_array, data)
+            // byte_array = updateByteArrray(byte_array, [Magic.INT])
+            byte_array = updateByteArray(byte_array, data)
             return byte_array;
         case Magic.FLOAT:
             if (checkType && !(typeof obj_run_param === 'number')) {
                 throw new Error("Parameter Float Type Mismatch.")
             }
             data = floatConvHelper(obj_run_param)
-            byte_array = updateByteArrray(byte_array, data)
+            // byte_array = updateByteArrray(byte_array, [Magic.FLOAT])
+            byte_array = updateByteArray(byte_array, data)
             return byte_array;
         case Magic.STRING:
             if(checkType && !(typeof obj_run_param === 'string')) {
                 throw new Error("Parameter String Type Mismatch.")
             }
             data = strConvHelper(obj_run_param)
-            byte_array = updateByteArrray(byte_array, data)
+            // byte_array = updateByteArrray(byte_array, [Magic.STRING])
+            byte_array = updateByteArray(byte_array, data)
             return byte_array;
         case Magic.ARRAY:
             // encoding array header done in helper
@@ -109,7 +112,7 @@ export function encodeEachParam(byte_array, obj_run_param, func_param_type, chec
             for (let i = 0; i < 32; i +=4) {
                 obj_head_len[5 - (i / 8 + 1)] = new Uint8Array(buffer)[i]
             }
-            byte_array = updateByteArrray(byte_array, obj_head_len)
+            byte_array = updateByteArray(byte_array, obj_head_len)
             
             // encode each of the attributes within object
             // get obj key & values
@@ -123,7 +126,7 @@ export function encodeEachParam(byte_array, obj_run_param, func_param_type, chec
             byte_array = objConvHelper(byte_array, keys, values)
             return byte_array;
         case Magic.VOID:
-            byte_array = updateByteArrray(byte_array, [Magic.VOID])
+            byte_array = updateByteArray(byte_array, [Magic.VOID])
             return byte_array
         default:
             throw new Error("Idk why tf ur here, this should not happen")
@@ -218,7 +221,7 @@ export function recurArrHelper(byte_array, obj_run_param, first_call=true, obj_r
             arr_head_len[5 - (i / 8 + 1)] = new Uint8Array(buffer)[i]
         }
 
-        byte_array = updateByteArrray(byte_array, arr_head_len)
+        byte_array = updateByteArray(byte_array, arr_head_len)
     }
 
     // base case: array is now empty
@@ -227,13 +230,13 @@ export function recurArrHelper(byte_array, obj_run_param, first_call=true, obj_r
     } 
     // empty array immediately at input 
     if ((first_call && obj_run_param.length === 0)) {
-        byte_array =  updateByteArrray(byte_array, [Magic.ARRAY, 0, 0, 0, 0])
+        byte_array =  updateByteArray(byte_array, [Magic.ARRAY, 0, 0, 0, 0])
         return byte_array
     }
 
     // speical case: empty array within obj_run_param array
     if (obj_run_param[0].length === 0) {
-        byte_array =  updateByteArrray(byte_array, [Magic.ARRAY, 0, 0, 0, 0])
+        byte_array =  updateByteArray(byte_array, [Magic.ARRAY, 0, 0, 0, 0])
         return recurArrHelper(byte_array, obj_run_param.slice(1), false)
     }
 
@@ -279,10 +282,10 @@ export function objConvHelper(byte_array, keys, values) {
     let temp_all_keys_arr = []
     for (const key of keys) { // encode each key into the byte array first
         temp_key_arr = strConvHelper(key)
-        temp_all_keys_arr = updateByteArrray(temp_all_keys_arr, temp_key_arr)
+        temp_all_keys_arr = updateByteArray(temp_all_keys_arr, temp_key_arr)
     }
     // encoding values for key into the byte array, which is in the form of an array
-    byte_array = updateByteArrray(byte_array, temp_all_keys_arr)
+    byte_array = updateByteArray(byte_array, temp_all_keys_arr)
     byte_array = recurArrHelper(byte_array, values, true, true)
     return byte_array
 }
@@ -378,19 +381,18 @@ function _decode(arr, s) {
 }
 
 
-function encode_fdef(funclist) {
+export function encode_fdef(funclist) {
     let res = [0xF2, 0, 0, 0, 0]
     
-    for (func in funclist) {
+    for (const func of funclist) {
         encode_function(res, func)
     }
     let len = res.length - 5
-    res[1] = len & 0xFF000000 >> 24
-    res[2] = len & 0xFF0000 >> 16
-    res[3] = len & 0xFF00 >> 8
-    res[4] = len & 0xFF
-
-    return Uint8Array(res)
+    res[1] = (len & 0xFF000000) >> 24
+    res[2] = (len & 0xFF0000) >> 16
+    res[3] = (len & 0xFF00) >> 8
+    res[4] = (len & 0xFF)
+    return new Uint8Array(res)
 }
 
 function encode_function(res, func) {
@@ -416,9 +418,10 @@ function encode_function(res, func) {
 }
 
 export function decode_function(data, length) {
+    console.log(data)
     let s=0
-    let id = data[s++] << 8 + data[s++]
-    let retid = data[s++] << 8 + data[s++]
+    let id = (data[s++] << 8) + data[s++]
+    let retid = (data[s++] << 8) + data[s++]
     let params = []
 
     while (s < length) {
@@ -427,6 +430,10 @@ export function decode_function(data, length) {
         params.push(val)
     }
 
+    console.log(id)
+    console.log(retid)
+    console.log(params)
+    console.log(length)
     return [id, retid, params]
 }
 
@@ -436,17 +443,23 @@ export function encode_return(retid, value, type) {
     let res = [0xB0, 0, 0, 0, 0]
     res.push((retid & 0xFF00) >> 8)
     res.push(retid & 0xFF)
+    console.log(retid)
+    console.log(value)
+    console.log(type)
 
-    arr = encodeEachParam(value, type)
+    console.log("A")
+    const arr = encodeEachParam(new Uint8Array(), value, type)
     arr.forEach(a => res.push(a));
 
+    console.log("B")
     let len = res.length - 5
-    res[1] = len & 0xFF000000 >> 24
-    res[2] = len & 0xFF0000 >> 16
-    res[3] = len & 0xFF00 >> 8
-    res[4] = len & 0xFF
+    res[1] = (len & 0xFF000000) >> 24
+    res[2] = (len & 0xFF0000) >> 16
+    res[3] = (len & 0xFF00) >> 8
+    res[4] = (len & 0xFF)
+    console.log("C")
 
-    return Uint8Array(res)
+    return new Uint8Array(res)
 }
 
 // Tests

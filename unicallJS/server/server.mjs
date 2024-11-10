@@ -1,15 +1,14 @@
 import { Function } from "../classes.mjs"
-import { INT, FLOAT, STRING, ARRAY, OBJECT, FLOAT } from "../magic.mjs"
 import * as net from "net"
-import { decode_function } from "../coding.mjs"
+import { decode_function, encode_fdef, encode_return } from "../coding.mjs"
 
-function serve(functions) {
+export function serve(...functions) {
 
   // if we have no argument, return, otherwrise get socket
   let socket_name = undefined
   process.argv.forEach((a, i) => {
     if (i < 2) return // ignore first two
-    let match = a.match(/sock=(.*)/)
+    let match = a.match(/socket=(.*)/)
     if (match == null) return
     socket_name = match[1]
   })
@@ -20,7 +19,7 @@ function serve(functions) {
   
   let id = 0;
   for (const [func, types, ret] of functions) {
-    funclist.push(new Function(types, ret, id++, func.name, exec))
+    funclist.push(new Function(types, ret, id++, func.name, func))
   }
 
   // establish socket
@@ -31,21 +30,24 @@ function serve(functions) {
 
   // now listen for function calls
   socket.on("readable", async () => {
-    const head = new UInt8Array(socket.read(5))
-    const length = head[1] << 24 + head[2] << 16 + head[3] << 8 + head[4]
-    const data = new UInt8Array(socket.read(length))
-    call_function(data)
+    const head = new Uint8Array(socket.read(5))
+    const length =
+      (head[1] << 24) +
+      (head[2] << 16) +
+      (head[3] << 8)  +
+      (head[4])
+    const data = new Uint8Array(socket.read(length))
+    call_function(data, funclist, socket, length)
   })
 }
 
 
-async function call_function(data, funclist, socket) {
-  let [id, retid, params] = decode_function(data)
+async function call_function(data, funclist, socket, length) {
+  let [id, retid, params] = decode_function(data, length)
   // find the function
   const func = funclist.find(a => a.id == id)
   // if func doesn't exist, die
   if (!func) {
-    console.log(`bad id ${id}`)
     return error(socket)
   }
 
@@ -57,19 +59,19 @@ async function call_function(data, funclist, socket) {
     console.log(`function ${id} errored out:\n${e}`)
     return error(socket)
   }
-
   // send back the result
   let packet = undefined
   try {
-    packet = encode_return(retid, res, func.type)
+    packet = encode_return(retid, res, func.ret)
   } catch (e) {
     console.log(`encode failed for ${id}:\n${e}`)
+    console.log(e)
   }
-  socket.send(packet)
+  socket.write(packet)
 }
 
 function error(socket) {
-  socket.send(new UInt8Array([0xA, 0x7]))
+  socket.write(new Uint8Array([0xA, 0x7]))
 }
 
 

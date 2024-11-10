@@ -1,4 +1,7 @@
-import { serve } from X
+import { serve } from "./unicallJS/server/server.mjs"
+import { Magic } from "./unicallJS/magic.mjs"
 
 function dosomething(a) { return a + 5 }
-serve(dosomething)
+serve(
+    [dosomething, [Magic.INT], Magic.INT]
+)

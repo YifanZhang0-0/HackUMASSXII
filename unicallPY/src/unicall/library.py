@@ -1,12 +1,13 @@
-from unicall import classes
 import asyncio
+import socket
+from unicall import classes
+from unicall import coding
 class Library:
-    def __init__(self, filename, filetype):
+    def __init__(self, filename):
         self.filename = filename
-        self.filetype = filetype
         self.return_id = 0
         self.functions: list[classes.FunctionMeta] = [] # fill this out with spinup
-        self.socket = None
+        self.socket: socket.socket = None
         self.waitlist: list[tuple[int, asyncio.Future]] = []
 
     def load(self):
@@ -38,9 +39,9 @@ class Library:
             *params
         )
         # add to waitlist
-        res = Future()
+        res = asyncio.Future()
         
-        self.waitlist.push([self.return_id, res])
+        self.waitlist.append([self.return_id, res])
 
         self.return_id += 1
 

@@ -4,7 +4,12 @@ document.addEventListener('DOMContentLoaded', function() {
   const imageContainer = document.querySelector('.image-container');
   const runButton = document.getElementById('runButton');
   const textAreas = document.querySelectorAll('.text-area, .console-area');
-  const inputSection = document.querySelector('.input-section');
+  const execute = document.querySelector(".Execute")
+  // const inputSection = document.querySelector('.input-section');
+
+  const javascript = document.getElementById("javascript")
+  
+
   let currentImage = 1;
 
   // Smooth title animation
@@ -22,7 +27,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 500); // Wait for fade out before changing image
   }
 
-  runButton.addEventListener('click', changeImage);
+  execute.addEventListener('click', () => {
+    fetch("/runlocal", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        file: 'test.py',
+        js: javascript.textContent
+      })
+    }).then(a => a.json()).then(console.log)
+  });
 
   // Show initial image
   setTimeout(() => {

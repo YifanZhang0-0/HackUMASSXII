@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const javascript = document.getElementById("javascript")
   
-
   let currentImage = 1;
 
   // Smooth title animation
@@ -32,10 +31,10 @@ document.addEventListener('DOMContentLoaded', function() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        file: 'test.py',
-        js: javascript.textContent
+        file: "test.py",
+        js: javascript.value
       })
-    }).then(a => a.json()).then(console.log)
+    }).then(console.log).then(a => a.json()).then(console.log)
   });
 
   // Show initial image

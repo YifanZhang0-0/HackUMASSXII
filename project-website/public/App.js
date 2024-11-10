@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const showcaseImage = document.getElementById('showcaseImage');
   const imageContainer = document.querySelector('.image-container');
   const runButton = document.getElementById('runButton');
+  const textAreas = document.querySelectorAll('.text-area, .console-area');
+  const inputSection = document.querySelector('.input-section');
   let currentImage = 1;
 
   // Smooth title animation
@@ -27,7 +29,6 @@ document.addEventListener('DOMContentLoaded', function() {
       showcaseImage.classList.add('visible');
   }, 100);
 
-
   // Detect when image container enters the viewport
   function handleScroll() {
     const rect = imageContainer.getBoundingClientRect();
@@ -37,6 +38,25 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   window.addEventListener('scroll', handleScroll);
-
   handleScroll();
+
+  // IntersectionObserver for the input section animations
+  const observerOptions = {
+    threshold: 0.5 // Adjust this value as needed
+  };
+
+  const inputObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        textAreas.forEach((textArea, index) => {
+          setTimeout(() => {
+            textArea.classList.add('animated');
+          }, index * 200); // Staggered animation effect
+        });
+        inputObserver.unobserve(entry.target); // Stop observing once triggered
+      }
+    });
+  }, observerOptions);
+
+  inputObserver.observe(inputSection); // Start observing the input section
 });

@@ -1,3 +1,11 @@
+body {
+  background-color: #f0f0f0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body, html {
   margin: 0;
   padding: 0;
@@ -13,7 +21,7 @@ body, html {
 }
 
 .welcome {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: black;
 }
 
 .title {
@@ -105,8 +113,13 @@ body, html {
 /* Styles for the input section */
 .input-section {
   display: flex;
-  justify-content: center;
-  padding: 20px;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+  padding-top: 5rem; /* Adjust if necessary to make space for the navbar */
+  background: black; /* Matching gradient */
+  color: white; /* Ensures text is visible */
 }
 
 /* Input container with a two-column grid */
@@ -130,9 +143,17 @@ body, html {
 .input-label {
   font-size: 1rem;
   margin-bottom: 5px;
-  color: #333;
+  color: White;
   align-self: flex-start; /* Aligns label to the left */
-  padding-left: 10%; /* Adds space to keep label aligned with textarea */
+  padding-left: 9%; /* Adds space to keep label aligned with textarea */
+}
+
+.input-label-console {
+  font-size: 1rem;
+  margin-bottom: 5px;
+  color: White;
+  align-self: flex-start; /* Aligns label to the left */
+  padding-left: 5%; /* Adds space to keep label aligned with textarea */
 }
 
 /* Style for textarea */
@@ -168,6 +189,42 @@ body, html {
   max-width: 100%; /* Optional: limits the width of the container */
 }
 
+/* Console group styling */
+.console-group {
+  width: 100%; /* Full width of the section */
+  max-width: 1330px;
+  margin-top: 20px; /* Space between input containers and console */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  grid-column: 1 / span 2;
+}
+
+.console-group label {
+  text-align: left;
+  font-size: 1rem;
+  color: White;
+}
+
+/* Styling for the console text area */
+.console-area {
+  width: 100%; /* Wider than the input text areas */
+  height: 300px; /* Taller than the input text areas */
+  padding: 10px;
+  margin-left: 147px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+  resize: vertical; /* Allows resizing vertically */
+}
+
+.console-area:focus {
+  border-color: #333;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+
 .button-container {
   margin-top: 10px; /* Adjusts space between text areas and button */
   text-align: center;
@@ -177,3 +234,91 @@ body, html {
   padding: 10px 20px;
   font-size: 1rem;
 }
+
+
+.Execute {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 0;
+}
+
+.Execute:hover {
+  background-color: #555;
+}
+
+
+/* Keyframes for fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animated {
+  animation: fadeIn 1s ease-out forwards;
+}
+
+/* Apply animation to the text areas */
+.text-area, .console-area {
+  animation: fadeIn 1s ease-out;
+}
+
+/* Adjust as needed for timing */
+.input-group, .console-group {
+  animation: fadeIn 1s ease-out;
+  animation-delay: 0.2s; /* Add a slight delay for effect */
+}
+
+.animated {
+  animation: fadeIn 1s ease-out forwards;
+}
+
+
+/* Style for the navigation bar */
+.navbar {
+  display: flex;
+  justify-content: center; /* Center the buttons horizontally */
+  align-items: center;
+  background-color: #333; /* Dark background color */
+  padding: 1rem; /* Add padding for spacing */
+  position: fixed; /* Fix it to the top */
+  top: 0;
+  width: 100%; /* Full width */
+  z-index: 1000; /* Ensure it stays on top of other elements */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
+}
+
+/* Style for the navigation links */
+.nav-link {
+  color: white; /* Text color */
+  text-decoration: none; /* Remove underline */
+  margin: 0 1rem; /* Spacing between the buttons */
+  font-size: 1.2rem; /* Font size */
+  font-weight: bold; /* Bold text */
+  border-radius: 5px; /* Rounded corners */
+  padding: 0.5rem 1rem; /* Padding for button feel */
+  transition: background-color 0.3s ease; /* Smooth hover transition */
+}
+
+/* Hover effect for the navigation links */
+.nav-link:hover {
+  background-color: #555; /* Darker background on hover */
+  color: #ffcc00; /* Optional accent color for hover */
+}
+
+.text-area:hover, .console-area:hover {
+  transform: translateY(-5px); /* Moves the text box up by 5px */
+  transition: transform 0.3s ease; /* Smooth transition for the effect */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Optional shadow for depth */
+}
+

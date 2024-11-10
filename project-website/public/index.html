@@ -7,33 +7,43 @@
     <link rel="stylesheet" href="style.css"> <!-- Link to external CSS -->
 </head>
 <body>
-    <section class="section welcome">
+    <!-- Nav Bar -->
+    <nav class="navbar">
+        <a href="#welcomeSection" class="nav-link">Home</a>
+        <a href="#inputSection" class="nav-link">Demo</a>
+    </nav>
+
+    <!-- Welcome Section -->
+    <section id="welcomeSection" class="section welcome">
         <h1 id="smoothTitle" class="title">Welcome to Our Dope Website</h1>
     </section>
 
-    <section class="section input-section">
-      <div class="input-container">
-          <div class="input-group">
-              <label for="language1" class="input-label">Python</label>
-              <textarea id="language1" placeholder="Enter text here..." class="text-area"></textarea>
-          </div>
-          <div class="input-group">
-              <label for="language2" class="input-label">Javascript</label>
-              <textarea id="language2" placeholder="Enter text here..." class="text-area"></textarea>
-          </div>
-      </div>
-  
-      <!-- Centered 'Run' button with minimal spacing below text areas -->
-      <div class="button-container">
-          <button class="Execute">Run</button>
-      </div>
-    </section>
-  
-  
-  
-  
+    <!-- Input Section -->
+    <section id="inputSection" class="section input-section">
+        <div class="input-container">
+            <div class="input-group">
+                <label for="language1" class="input-label">Python</label>
+                <textarea id="language1" placeholder="Enter code here..." class="text-area"></textarea>
+            </div>
+            <div class="input-group">
+                <label for="language2" class="input-label">JavaScript</label>
+                <textarea id="language2" placeholder="Enter code here..." class="text-area"></textarea>
+            </div>
+            <!-- Console textbox -->
+            <div class="console-group">
+                <label for="consoleOutput" class="input-label-console">Console Output</label>
+                <textarea id="consoleOutput" placeholder="Output will be shown here..." class="console-area"></textarea>
+            </div>
+        </div>
 
-    <section class="section showcase">
+        <!-- 'Run' button -->
+        <div style="text-align: center; margin-top: 10px;">
+            <button class="Execute">Run</button>
+        </div>
+    </section>
+
+    <!-- Showcase Section -->
+    <section id="imageSection" class="section showcase">
         <div class="image-container">
             <img id="showcaseImage" class="image-showcase" src="https://picsum.photos/600/400?random=1" alt="Showcase image">
             <button id="runButton" class="run-button" aria-label="Run showcase">
@@ -42,13 +52,13 @@
                 </svg>
             </button>
             <div class="image-info">
-                <h2>Image Showcase</h2>
-                <p>Click the "Run" button in the top right corner to see the next image with a smooth transition.</p>
+                <h2>Demo</h2>
+                <p>Click the "Run" button in the top right corner to see the demo</p>
             </div>
         </div>
     </section>
-    <script src="App.js"></script> <!-- Link to external JavaScript -->
+
+    <!-- Link to external JavaScript -->
+    <script src="App.js"></script>
 </body>
 </html>
-
-

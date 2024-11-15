@@ -1,6 +1,6 @@
 import { Function } from "../classes.mjs"
 import * as net from "net"
-import { decode_function, encode_fdef, encode_return } from "../coding.mjs"
+import { decode_function, encode_manifest, encode_return } from "../coding.mjs"
 
 export function serve(...functions) {
 
@@ -26,7 +26,7 @@ export function serve(...functions) {
   const socket = net.createConnection(socket_name)
 
   // write all functions to socket
-  socket.write(encode_fdef(funclist))
+  socket.write(encode_manifest(funclist))
 
   // now listen for function calls
   socket.on("readable", async () => {
@@ -57,7 +57,6 @@ async function call_function(data, funclist, socket, length) {
   try {
     res = await func.exec(...params)
   } catch (e) {
-    console.log(`function ${id} errored out:\n${e}`)
     return error(socket)
   }
   // send back the result
@@ -65,8 +64,6 @@ async function call_function(data, funclist, socket, length) {
   try {
     packet = encode_return(retid, res, func.ret)
   } catch (e) {
-    console.log(`encode failed for ${id}:\n${e}`)
-    console.log(e)
   }
   socket.write(packet)
 }

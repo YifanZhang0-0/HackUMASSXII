@@ -1,335 +1,247 @@
-import { encode } from 'punycode';
 import { Magic } from './magic.mjs';
-import assert from 'assert';
+import { strict as assert } from "assert";
+import { Function } from "./classes.mjs"
 
 /**
- * Update the Unit8Array that carries binary info.
- * @param {Uint8Array} byte_array - The byte array encoded with all the information to be sent to python.
- * @param {array} data - The data to be placed into byte_array.
- * @returns {Uint8Array} Updated byte_array.
+ * encodes a function call with specific parameters
+ * @param {Function} func
+ * @param {number} retid
+ * @param {...*} params 
  */
-function updateByteArray(byte_array, data) {
-    let new_byte_array = new Uint8Array(byte_array.length + data.length);
-    new_byte_array.set(byte_array)
-    new_byte_array.set(data, byte_array.length)
-    return new_byte_array
-}
-
-function initFunCall(byte_array, id, ret) {
-    // split func id & ret id into two bytes
-    let temp = new Uint16Array([id, ret])
-    let id0 = (temp[0] & 0xFF00) >> 8 // first 8 bits
-    let id1 = temp[0] & 0x00FF // last 8 bits
-    let ret0 = (temp[1] & 0xFF00) >> 8 // first 8 bits
-    let ret1 = temp[1] & 0x00FF // last 8 bits
-
-    let data = [Magic.FCALL, 0, 0, 0, 0, id0, id1, ret0, ret1]
-    return updateByteArray(byte_array, data)
-}
-
-/**
- * Encodes a function call into binaries to be sent to python for invocation.
- * @param {Object} func - Function object describing a callable python function.
- * @param  {...any} params - List of parameter(s) the python function needs.
- * @returns {Uint8Array} - Encoded python function call in binaries.
- */
-export function encoding(func, retid, ...params) {
-    
-    let byte_array = new Uint8Array();
-    // func is func obj
-    let param_types = func.types // strings of the type itself
-    let id = func.id
-
-    // count checking
-    if(!(params.length === param_types.length)) {
-        throw new Error("Parameter Count Mismatch.")
+export function encode_call(func, retid, ...params) {
+    const res = [Magic.FCALL, 0, 0, 0, 0]
+    res.push((func.id >> 8) & 0xFF)
+    res.push(func.id & 0xFF)
+    res.push((retid >> 8) & 0xFF)
+    res.push(retid & 0xFF)
+    assert(func.types.length == params.length, `Mismatched number of args: wanted ${func.types.length} but got ${params.length}`)
+    for (let i=0; i<params.length; i++) {
+        encode_param(params[i], func.types[i], res)
     }
-
-    // encoding function headers & metadata & ids into byte_array
-    byte_array = initFunCall(byte_array, id, retid)
-
-    // encoding parameters into byteArra
-    for (let i = 0; i < param_types.length; i++) {
-        let obj_run_param = params[i]
-        let func_param_type = param_types[i]
-        byte_array = encodeEachParam(byte_array, obj_run_param, func_param_type)
-    }
-
-    let len = byte_array.length - 5
-    byte_array[1] = (len & 0xFF000000) >> 24
-    byte_array[2] = (len & 0xFF0000) >> 16
-    byte_array[3] = (len & 0xFF00) >> 8
-    byte_array[4] = (len & 0xFF)
-
-    return byte_array
+    let len = res.length-5
+    res[1] = (len & 0xFF000000) >> 24
+    res[2] = (len & 0xFF0000) >> 16
+    res[3] = (len & 0xFF00) >> 8
+    res[4] = (len & 0xFF)
+    return new Uint8Array(res)
 }
 
 /**
- * Fact checking & tries type conversion & updates byte_array within each case.
- * @param {array} params - Params from obj.run, what we want to pass into python.
- * @param {array} param_types - Actual function parameter types specified by python.
+ * encodes an entire function manifest (all available functions to call)
+ * @param {Array<Function>} funcs 
  */
-export function encodeEachParam(byte_array, obj_run_param, func_param_type, checkType=true) {
-    // we check type by default, toggle off for Object encoding
-    let data;
-    switch (func_param_type) {
+export function encode_manifest(funcs) {
+    let res = [0xF2, 0, 0, 0, 0]
+    for (const func of funcs) {
+        encode_def(func, res)
+    }
+    let len = res.length-5
+    res[1] = (len & 0xFF000000) >> 24
+    res[2] = (len & 0xFF0000) >> 16
+    res[3] = (len & 0xFF00) >> 8
+    res[4] = (len & 0xFF)
+    return new Uinit8Array(res)
+}
+/**
+ * encodes a single function's definition
+ * @param {Function} func 
+ * @param {Array<number>} res
+ */
+function encode_def(func, res) {
+    // encode 2 byte id
+    res.push((func.id & 0xFF00) >> 8)
+    res.push(func.id & 0xFF)
+    // encode 2 byte length of function name
+    res.push((func.name.length & 0xFF00) >> 8)
+    res.push(func.name.length & 0xFF)
+    // encode function name
+    for (let i=0; i<func.name.length; i++) {
+        res.push(func.name.charCodeAt(i))
+    }
+    // encode return type
+    res.push(func.ret)
+    // encode number of arguments
+    res.push((func.types.length & 0xFF00) >> 8)
+    res.push(func.types.length & 0xFF)
+    // encode argument types
+    func.types.forEach(a => {
+        res.push(a)
+    })
+}
+
+/**
+ * encodes a single value with a return id to be returned
+ * @param {number} retid 
+ * @param {*} value 
+ * @param {number} type 
+ */
+export function encode_return(retid, value, type) {
+    let res = [0xB0, 0, 0, 0, 0]
+    res.push((retid & 0xFF00) >> 8)
+    res.push(retid & 0xFF)
+
+    encode_param(value, type, res)
+
+    let len = res.length - 5
+    res[1] = (len & 0xFF000000) >> 24
+    res[2] = (len & 0xFF0000) >> 16
+    res[3] = (len & 0xFF00) >> 8
+    res[4] = (len & 0xFF)
+
+    return new Uint8Array(res)
+}
+/**
+ * encodes params, does type checking
+ * @param {*} param 
+ * @param {number} type 
+ * @param {Array} res
+ */
+export function encode_param(param, type, res) {
+    switch (type) {
         case Magic.INT:
-            if (checkType && !(typeof obj_run_param === 'number')) {
-                throw new Error("Parameter Int Type Mismatch.")
+            assert(typeof param == "number", `TypeError: ${param} is not a number!`)
+            res.push(Magic.INT)
+            let dv = new DataView(new ArrayBuffer(8))
+            dv.setBigInt64(0, BigInt(param), true)
+            for (let i=7; i>=0; i--) {
+                res.push(dv.getUint8(i))
             }
-            data = intConvHelper(Math.floor(obj_run_param))
-            // byte_array = updateByteArrray(byte_array, [Magic.INT])
-            byte_array = updateByteArray(byte_array, data)
-            return byte_array;
+            break;
         case Magic.FLOAT:
-            if (checkType && !(typeof obj_run_param === 'number')) {
-                throw new Error("Parameter Float Type Mismatch.")
-            }
-            data = floatConvHelper(obj_run_param)
-            // byte_array = updateByteArrray(byte_array, [Magic.FLOAT])
-            byte_array = updateByteArray(byte_array, data)
-            return byte_array;
+            assert(typeof param == "number", `TypeError: ${param} is not a number!`)
+            res.push(Magic.FLOAT)
+            res.push(...new Uint8Array(new Float64Array([param]).buffer))
+            break;
         case Magic.STRING:
-            if(checkType && !(typeof obj_run_param === 'string')) {
-                throw new Error("Parameter String Type Mismatch.")
-            }
-            data = strConvHelper(obj_run_param)
-            // byte_array = updateByteArrray(byte_array, [Magic.STRING])
-            byte_array = updateByteArray(byte_array, data)
-            return byte_array;
+            assert(typeof param == "string", `TypeError: ${param} is not a string!`)
+            encode_param_loose(param, res)
+            break;
         case Magic.ARRAY:
-            // encoding array header done in helper
-            // encoding array content
-            byte_array = recurArrHelper(byte_array, obj_run_param, Magic.ARRAY)
-            return byte_array;
+            assert(typeof param == "object" && Array.isArray(param), `TypeError: ${param} is not an array!`)
+            encode_param_loose(param, res)
+            break;
         case Magic.OBJECT:
-            // encoding object headers
-            const temp = new Uint32Array([Object.keys(obj_run_param).length]) //object length -> 4 bytes
-            const buffer = temp.buffer
-            
-            let obj_head_len = new Uint8Array(5) // obj header + obj len
-            obj_head_len[0] = Magic.OBJECT
-            for (let i = 0; i < 32; i +=4) {
-                obj_head_len[5 - (i / 8 + 1)] = new Uint8Array(buffer)[i]
-            }
-            byte_array = updateByteArray(byte_array, obj_head_len)
-            
-            // encode each of the attributes within object
-            // get obj key & values
-            let keys = []
-            let values = [] 
-            for (const pair of Object.entries(obj_run_param)) {
-                keys.push(pair[0])
-                values.push(pair[1])
-            }
-            
-            byte_array = objConvHelper(byte_array, keys, values)
-            return byte_array;
-        case Magic.VOID:
-            byte_array = updateByteArray(byte_array, [Magic.VOID])
-            return byte_array
+            assert(typeof param == "object" , `TypeError: ${param} is not an object!`)
+            encode_param_loose(param, res)
+            break;
         default:
-            throw new Error("Idk why tf ur here, this should not happen")
+            throw Error(`invalid type: ${type}`)
     }
 }
 
 /**
- * Helper function for integer conversion into bytes array. Int/Float interchangeable.
- * @param {number} num - Int from params.
- * @returns {Uint8Array} Binary representation with newly encoded integer.
+ * encodes params, infers type from value of param
+ * @param {*} param 
+ * @param {Array} res
  */
-export function intConvHelper(num) {
-    // convert int into 64 bits (8 bytes)
-    const temp = new BigInt64Array([BigInt(num)])
-    let int_arr = new Uint8Array(9) // header + int itself
-    int_arr[0] = Magic.INT
-    for (let i = 0; i < 64; i+=8) {
-        // shift to right and mask to keep right most 8 bits
-        int_arr[8 - i/8] = Number((temp[0] >> BigInt(8 * i)) & 0xFFn)
+export function encode_param_loose(param, res) {
+    const type = typeof param
+    switch (type) {
+        case "bigint":
+        case "boolean":
+        case "number":
+            let num=param
+            if (type == "bigint") num = BigInt.asIntN(64, param)
+            if (type == "boolean") num = param ? 0 : 1
+            // get type and do different things based off type
+            if (num % 1 == 0) {
+                res.push(Magic.INT)
+                let dv = new DataView(new ArrayBuffer(8))
+                dv.setBigInt64(0, BigInt(param), true)
+                for (let i=7; i>=0; i--) {
+                    res.push(dv.getUint8(i))
+                }
+            }
+            else {
+                res.push(Magic.FLOAT)
+                res.push(...new Uint8Array(new Float64Array([num]).buffer))
+            }
+            break;
+        case "string":
+            res.push(Magic.STRING)
+            for (let i=0; i<4; i++) {
+                res.push((param.length >> 8*(3-i)) & 0xFF)
+            }
+            for (let i=0; i<param.length; i++) {
+                res.push(param.charCodeAt(i))
+            }
+            break;
+        case "object":
+            if (Array.isArray(param)) {
+                res.push(Magic.ARRAY)
+                res.push((param.length & 0xFF000000) >> 24)
+                res.push((param.length & 0xFF0000) >> 16)
+                res.push((param.length & 0xFF00) >> 8)
+                res.push((param.length & 0xFF))
+                for (let i=0; i<param.length; i++) {
+                    encode_param_loose(param[i], res)
+                }
+            } else {
+                let keys = []
+                let values = [] 
+                for (const pair of Object.entries(param)) {
+                    keys.push(pair[0])
+                    values.push(pair[1])
+                }
+                res.push(Magic.OBJECT)
+                res.push((keys.length & 0xFF000000) >> 24)
+                res.push((keys.length & 0xFF0000) >> 16)
+                res.push((keys.length & 0xFF00) >> 8)
+                res.push((keys.length & 0xFF))
+                for (const key of keys) {
+                    encode_param(key, Magic.STRING, res)
+                }
+                for (const value of values) {
+                    encode_param_loose(value, res)
+                }
+            }
+            break;
+        case "undefined":
+            res.push(Magic.VOID)
+            break;
+        default:
+            throw Error(`type ${type} cannot be serialized`)
     }
-    return int_arr
 }
+
+
+
+
 
 /**
- * Helper function for float conversion into bytes array.
- * @param {number} num - Float from params.
- * @returns {Uint8Array} Binary representation with newly encoded float.
+ * decodes a uint8array arr starting from point s
+ * @param {Uint8Array} arr 
+ * @param {number} s
+ * @returns {*}
  */
-export function floatConvHelper(num) {
-    // convert float into 64 bits (8 bytes)
-    let dv = new DataView(new ArrayBuffer(8))
-    dv.setFloat64(0, num, false)
-
-    let res = new Uint8Array(9)
-    for (let i=0; i<8; i++) {
-        res[i+1] = dv.getUint8(i)
-    }
-    res[0] = Magic.FLOAT
-    
-    return res
-}
-
-/**
- * Helper function for string conversion into bytes array.
- * @param {string} str - string from params.
- * @returns {array} a byte array encoded with string.
- */
-export function strConvHelper(str) {
-    const temp = new Uint32Array([str.length]) //string length -> 4 bytes
-    const buffer = temp.buffer
-
-    let str_head_len = new Uint8Array(5) // header + str len
-    str_head_len[0] = Magic.STRING
-    for (let i = 0; i < 32; i +=4) {
-        str_head_len[5 - (i / 8 + 1)] = new Uint8Array(buffer)[i]
-    }
-
-    let start_index = 5
-    let str_arr = new Uint8Array(5 + str.length)
-
-    // populate str_arr with complete header information
-    for (let j = 0; j < str_head_len.length; j++) {
-        str_arr[j] = str_head_len[j]
-    }
-
-    for (let indx in str.split("")) { 
-        // PUMP into str_arr the 8-bits chars
-        str_arr[start_index] = str.codePointAt(indx)
-        start_index += 1
-    }
-    return str_arr
-}
-
-/**
- * Recursivly construct a binary representation of an array parameter.
- * @param {Uint8Array} byte_array - The byte array encoded with all the information to be sent to python.
- * @param {Any} obj_run_param - The array to be encoded into binaries.
- * @param {boolean} first_call - Whether or not it is the first call for this recursion
- * @returns {Uint8Array} Binary representation with newly encoded array.
- */
-export function recurArrHelper(byte_array, obj_run_param, first_call=true, obj_recursion=false) { 
-    // recurisvely tries to construct an array from the params
-    // first thing first, if the length of the array is not 0, we encode its length into the byte array
-    // none object recursion, no array header annotation
-    if (first_call && obj_run_param.length != 0 && !obj_recursion) {
-        const temp = new Uint32Array([obj_run_param.length]) //string length -> 4 bytes
-        const buffer = temp.buffer
-
-        let arr_head_len = new Uint8Array(5) // header + array len
-        arr_head_len[0] = Magic.ARRAY
-        for (let i = 0; i < 32; i +=4) {
-            arr_head_len[5 - (i / 8 + 1)] = new Uint8Array(buffer)[i]
-        }
-
-        byte_array = updateByteArray(byte_array, arr_head_len)
-    }
-
-    // base case: array is now empty
-    if (!first_call && obj_run_param.length === 0) {
-        return byte_array
-    } 
-    // empty array immediately at input 
-    if ((first_call && obj_run_param.length === 0)) {
-        byte_array =  updateByteArray(byte_array, [Magic.ARRAY, 0, 0, 0, 0])
-        return byte_array
-    }
-
-    // speical case: empty array within obj_run_param array
-    if (obj_run_param[0].length === 0) {
-        byte_array =  updateByteArray(byte_array, [Magic.ARRAY, 0, 0, 0, 0])
-        return recurArrHelper(byte_array, obj_run_param.slice(1), false)
-    }
-
-    // singular element
-    let n = obj_run_param[0]
-    if (Array.isArray(n)) { // must be array only 
-        return recurArrHelper(byte_array, n)
-    } else { // must not be array
-        // individual elements
-        // no type checking
-        if (isInt(n)) {
-            byte_array = encodeEachParam(byte_array, n, Magic.INT, false)
-            return recurArrHelper(byte_array, obj_run_param.slice(1), false)
-        } else if (isFloat(n)) {
-            byte_array = encodeEachParam(byte_array, n, Magic.FLOAT, false)
-            return recurArrHelper(byte_array, obj_run_param.slice(1), false)
-        } else if (typeof n === 'string') {
-            byte_array = encodeEachParam(byte_array, n, Magic.STRING, false)
-            return recurArrHelper(byte_array, obj_run_param.slice(1), false)
-        } else if (typeof n === 'object' && !Array.isArray(n) && n !== null) { //strict check for object
-            // object 
-            let key_and_val = []
-            key_and_val = Object.entries(n)
-            byte_array = objConvHelper(byte_array, key_and_val[0], key_and_val[1])
-            return recurArrHelper(byte_array, obj_run_param.slice(1), false)
-        } else {
-            // VOID type
-            byte_array = encodeEachParam(byte_array, n, Magic.VOID)
-            return recurArrHelper(byte_array, obj_run_param.slice(1), false)
-        }
-    }
-}
-
-/**
- * Encodes an Object into binaries
- * @param {Uint8Array} byte_array - The byte array encoded with all the information to be sent to python.
- * @param {array[string]} keys - Array of keys of the Object.
- * @param {array[any]} values - Array of values of the Object.
- * @returns {Uint8Array} Binary representation with newly encoded object.
- */
-export function objConvHelper(byte_array, keys, values) {
-    let temp_key_arr = []
-    let temp_all_keys_arr = []
-    for (const key of keys) { // encode each key into the byte array first
-        temp_key_arr = strConvHelper(key)
-        temp_all_keys_arr = updateByteArray(temp_all_keys_arr, temp_key_arr)
-    }
-    // encoding values for key into the byte array, which is in the form of an array
-    byte_array = updateByteArray(byte_array, temp_all_keys_arr)
-    byte_array = recurArrHelper(byte_array, values, true, true)
-    return byte_array
-}
-
-/**
- * Checks if an number is integer.
- * @param {Number} n - Number to be checked.
- * @returns {Boolean} True or false for integer.
- */
-function isInt(n){
-    return Number(n) === n && n % 1 === 0;
-}
-
-/**
- * Checks if an number is float.
- * @param {Number} n - Number to be checked.
- * @returns {Boolean} True or false for float.
- */
-function isFloat(n){
-    return Number(n) === n && n % 1 !== 0;
-}
-
-
-
 export function decode(arr, s) {
     return _decode(arr, s)[0]
 }
 
+/**
+ * decodes and returns both value and length. This is used
+ * recursively and the length is necessary in order to add
+ * to s
+ * @param {Uint8Array} arr
+ * @param {number} s
+ * @returns {Array}
+ */
 function _decode(arr, s) {
     // get header
     const header = arr[s++]
     switch(header) {
         case Magic.INT:
-            let int = 0
+            let int = new Uint8Array(8)
             for (let i=0; i<8; i++) {
-                int |= arr[s + i] << ((7 - i) * 8)
+                int[i] = arr[s+i]
             }
-            return [int, 9]
+            return [Number(new DataView(int.buffer).getBigInt64(0, false)), 9]
         case Magic.FLOAT:
             let float = new Uint8Array(8)
             for (let i=0; i<8; i++) {
                 float[i] = arr[s+i]
             }
-            return [new DataView(float.buffer).getFloat64(0), 9]
+            return [new DataView(float.buffer).getFloat64(0, true), 9]
         case Magic.STRING:
             let slen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
             let string = ""
@@ -339,6 +251,7 @@ function _decode(arr, s) {
             }
             return [string, 5+slen]
         case Magic.ARRAY:
+            let as0 = s
             let alen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
             let array = []
             for (let i=0; i<alen; i++) {
@@ -346,9 +259,9 @@ function _decode(arr, s) {
                 s += size
                 array.push(val)
             }
-            return [array, 5+s]
+            return [array, s-as0+1]
         case Magic.OBJECT:
-            console.info('obj');
+            let os0 = s;
             let olen = (arr[s++] << 24) + (arr[s++] << 16) + (arr[s++] << 8) + arr[s++]
             let strings = []
             let object = {}
@@ -362,15 +275,13 @@ function _decode(arr, s) {
                 object[strings[i]] = val
                 s += len
             }
-            return object
+            return [object, s-os0+1]
         case Magic.VOID:
-            console.info('void');
             return undefined
         case Magic.ERR:
-            console.info('err');
             throw new Error("runtime error")
         default:
-            throw new Error(`invalid header for return packet ${header}`)
+            throw new Error(`invalid header for return packet ${header} at position ${s} in ${arr}`)
     }
 }
 
@@ -411,6 +322,7 @@ function encode_function(res, func) {
     })
 }
 
+/*
 export function decode_function(data, length) {
     let s=0
     let id = (data[s++] << 8) + data[s++]
@@ -424,41 +336,27 @@ export function decode_function(data, length) {
     }
 
     return [id, retid, params]
+}*/
+
+/**
+ * @param {Uint8Array} data 
+ * @param {number} length 
+ * @returns {Array} returns [function, new start idx]
+ */
+export function decode_header(data, s) {
+    const id = (data[s++] << 8) + data[s++]
+    let slen = (data[s++] << 8) + data[s++] + s
+    let name = ""
+    for (; s<slen; s++) {
+        name += String.fromCharCode(data[s])
+    }
+
+    const ret = data[s++]
+    let arglen = (data[s++] << 8) + data[s++] + s
+    const types = []
+    for (; s < arglen; s++) {
+        types.push(data[s])
+    }
+    return [new Function(types, ret, id, name), s]
 }
 
-
-
-export function encode_return(retid, value, type) {
-    let res = [0xB0, 0, 0, 0, 0]
-    res.push((retid & 0xFF00) >> 8)
-    res.push(retid & 0xFF)
-
-    const arr = encodeEachParam(new Uint8Array(), value, type)
-    arr.forEach(a => res.push(a));
-
-    let len = res.length - 5
-    res[1] = (len & 0xFF000000) >> 24
-    res[2] = (len & 0xFF0000) >> 16
-    res[3] = (len & 0xFF00) >> 8
-    res[4] = (len & 0xFF)
-
-    return new Uint8Array(res)
-}
-
-// Tests
-// {
-//     function demo_function(param) {}
-
-//     function test_updateByteArray() {
-//         let byteArray = new Uint8Array();
-//         const updated = updateByteArrray(byteArray, [1, 2, 3, 4]);
-//         assert.deepEqual(updated, new Uint8Array([1, 2, 3, 4]))        
-//     }
-
-//     function test_encode() {
-//         assert.equal(new Uint8Array(), encoding(demo_function, ['param']));
-//     }
-
-//     test_updateByteArray();
-//     test_encode();
-// }

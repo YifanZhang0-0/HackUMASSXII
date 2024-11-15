@@ -1,9 +1,13 @@
-import { encoding } from './coding.mjs';
+import { encode_call, decode_header, decode } from './coding.mjs';
 import { setup_socket } from "./client/spinup.mjs"
+import { strict as assert } from "assert"
 
-export const PY="python"
-export const JS="javascript"
-export const C="c"
+export const Langs = {
+  PY: "python",
+  JS: "javascript",
+  C: "c"
+}
+
 
 // function definition
 export class Function {
@@ -41,23 +45,26 @@ export class Library {
 
   async load() {
     
+    // TODO: increment this if it already exists
+    // TODO: on client, remove existing socket
     await setup_socket(this, `/tmp/${this.filename}.sock`)
     
     for (const func of this.functions) {
       this[func.name] = async (...params) => await this.run(func.id, ...params)
     }
+
+    return this
   }
 
   async run(id, ...params) {
     let retid = this.ret++
 
-    let bytes = encoding(this.functions[id], retid, ...params)
+    let bytes = encode_call(this.functions[id], retid, ...params)
     
     const wait = new Promise((res, _rej) => {
       this.waitlist.push([retid, res])
     })
     // send the byte array off
-    console.info("CALLING WITH", bytes)
     this.socket.write(bytes)
     // wait to get sent notified for the correct thing
     return await wait
@@ -67,6 +74,38 @@ export class Library {
     this.socket.destroy()
     this.server.close()
   }
+
+  set_functions(data) {
+    assert(this.functions === undefined, "attempted to redefine functions")
+    this.functions = []
+
+    let s = 0;
+    while (s < data.length) {
+      let [func, s1] = decode_header(data, s)
+      this.functions.push(func)
+      s = s1
+    }
+  }
+
+  process_return(data) {
+    
+    let s=0
+    const retid = (data[s++] << 8) + data[s++]
+    const value = decode(data, 2)
+
+    let idx;
+    this.waitlist.forEach((a, i) => {
+      if (a[0] != retid) return
+      idx = i
+      a[1](value)
+    })
+
+    if (idx === undefined)
+      throw new Error(`return id ${retid} not found in waitlist`);
+    this.waitlist.splice(idx, 1)
+
+  }
+  
 }
 
 

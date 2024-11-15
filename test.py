@@ -4,6 +4,7 @@ print("running python")
 
 @typed(int, returns=int)
 def addfive(a):
+    print("HIHI", a)
     return a+5
 
 
